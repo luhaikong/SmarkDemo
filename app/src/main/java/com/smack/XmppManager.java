@@ -2,7 +2,9 @@ package com.smack;
 
 import android.util.Log;
 
+import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
@@ -16,6 +18,7 @@ import org.jivesoftware.smackx.offline.OfflineMessageManager;
 import org.jxmpp.jid.parts.Localpart;
 import org.jxmpp.stringprep.XmppStringprepException;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +34,20 @@ public class XmppManager {
     private static int port = 5222;
     //openfire服务器名称
     private static String serviceName = "openfireName";
-
     private XMPPTCPConnection connection;
+    private boolean isLogoutNormal = false;//是否是正常退出
+
+    private static class Holder {
+        private static XmppManager singleton = new XmppManager();
+    }
+
+    public static XmppManager newInstance(){
+        return Holder.singleton;
+    }
+
+    public XmppManager (){
+
+    }
 
     /**
      * 获得所有联系人
@@ -122,13 +137,14 @@ public class XmppManager {
 
 
     /**
-     * 一上线获取离线消息
+     * 一上线获取离线消息(注：登录成功后调用)
      * 设置登录状态为在线
      */
-    private void getOfflineMessage() {
+    public List<Message> getOffLineMessage() {
         OfflineMessageManager offlineManager = new OfflineMessageManager(connection);
+        List<Message> list = null;
         try {
-            List<Message> list = offlineManager.getMessages();
+            list = offlineManager.getMessages();
             //删除离线消息
             offlineManager.deleteMessages();
             //将状态设置成在线
@@ -137,25 +153,22 @@ public class XmppManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return list;
     }
 
     /**
      * 登录
-     *
+     * 登陆成功需要调用-获取离线消息
      * @param userName 用户名
      * @param password 密码
      */
-    public void login(final String userName, final String password) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    connection.login(userName, password);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+    public void login(final String userName, final String password, ImConnectionListener listener) {
+        try {
+            connection.login(userName, password);
+            connection.addConnectionListener(listener);
+        } catch (XMPPException | SmackException | IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -267,5 +280,83 @@ public class XmppManager {
             e.printStackTrace();
         }
         return connection;
+    }
+
+    private class ImConnectionListener implements ConnectionListener{
+
+        private String ofUserName;
+        private String ofPassword;
+
+        public ImConnectionListener(String userName, String password) {
+            this.ofUserName = userName;
+            this.ofPassword = password;
+        }
+
+        /**
+         * 通知连接已成功连接到远程端点（例如xmpp服务器）
+         * 请注意，该连接可能还没有经过验证，因此可能只能进行有限的操作，如注册账户
+         * @param connection
+         */
+        @Override
+        public void connected(XMPPConnection connection) {
+
+        }
+
+        /**
+         * 连接已通过验证
+         * @param connection
+         * @param resumed
+         */
+        @Override
+        public void authenticated(XMPPConnection connection, boolean resumed) {
+
+        }
+
+        /**
+         * 连接正常关闭
+         */
+        @Override
+        public void connectionClosed() {
+            if (isLogoutNormal){
+                logout();
+            } else {
+                login(ofUserName,ofPassword,this);
+            }
+        }
+
+        /**
+         * 连接异常关闭
+         * @param e
+         */
+        @Override
+        public void connectionClosedOnError(Exception e) {
+
+        }
+
+        /**
+         * 连接已成功地重新连接到服务器。当上一个套接字连接突然关闭时，连接将重新连接到服务器。
+         */
+        @Override
+        public void reconnectionSuccessful() {
+
+        }
+
+        /**
+         * 连接将在指定的秒数中重试重新连接。
+         * @param seconds
+         */
+        @Override
+        public void reconnectingIn(int seconds) {
+
+        }
+
+        /**
+         * 连接到服务器的尝试失败了。连接将继续尝试重新连接到服务器在一瞬间。
+         * @param e
+         */
+        @Override
+        public void reconnectionFailed(Exception e) {
+
+        }
     }
 }
