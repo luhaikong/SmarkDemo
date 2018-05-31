@@ -1,32 +1,27 @@
-package com.smack;
+package com.smack.xmpp;
 
 import android.text.TextUtils;
 
 import org.jivesoftware.smack.MessageListener;
+import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
+import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.HostedRoom;
 import org.jivesoftware.smackx.muc.InvitationRejectionListener;
-import org.jivesoftware.smackx.muc.MucEnterConfiguration;
 import org.jivesoftware.smackx.muc.MultiUserChat;
-import org.jivesoftware.smackx.muc.MultiUserChatException;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
-import org.jivesoftware.smackx.muc.packet.MUCUser;
-import org.jxmpp.jid.DomainBareJid;
-import org.jxmpp.jid.EntityBareJid;
-import org.jxmpp.jid.EntityFullJid;
-import org.jxmpp.jid.Jid;
-import org.jxmpp.jid.parts.Resourcepart;
-import org.jxmpp.jid.util.JidUtil;
-import org.jxmpp.stringprep.XmppStringprepException;
+import org.jivesoftware.smackx.xdata.Form;
+import org.jivesoftware.smackx.xdata.FormField;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by MyPC on 2018/5/25.
@@ -40,11 +35,7 @@ public class XmppRoomManager {
     private List<HostedRoom> getHostedRoom(XMPPTCPConnection connection) {
         MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
         try {
-            //serviceNames->conference.106.14.20.176
-            List<DomainBareJid> serviceNames = manager.getXMPPServiceDomains();
-            for (int i = 0; i < serviceNames.size(); i++) {
-                return manager.getHostedRooms(serviceNames.get(i));
-            }
+            return manager.getHostedRooms(connection.getServiceName());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -55,7 +46,7 @@ public class XmppRoomManager {
      * 监听这个群的所有会话消息
      * @param jid 格式为>>群组名称@conference.ip
      */
-    private void initListener(XMPPTCPConnection connection, EntityBareJid jid) {
+    private void initListener(XMPPTCPConnection connection, String jid) {
         MultiUserChat multiUserChat = MultiUserChatManager.getInstanceFor(connection).getMultiUserChat(jid);
         multiUserChat.addMessageListener(new MessageListener() {
             @Override
@@ -73,13 +64,11 @@ public class XmppRoomManager {
      * @param connection
      * @param jid
      */
-    public void sendMessage(XMPPTCPConnection connection, EntityBareJid jid){
+    public void sendMessage(XMPPTCPConnection connection, String jid){
         MultiUserChat multiUserChat = MultiUserChatManager.getInstanceFor(connection).getMultiUserChat(jid);
         try {
             multiUserChat.sendMessage("Hello World");
         } catch (SmackException.NotConnectedException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -90,7 +79,7 @@ public class XmppRoomManager {
      * @param mucjid
      * @param userjid
      */
-    public void sendMessageToUserOfRoom(XMPPTCPConnection connection, EntityBareJid mucjid, EntityBareJid userjid){
+    public void sendMessageToUserOfRoom(XMPPTCPConnection connection, String mucjid, String userjid){
         // TODO
     }
 
@@ -101,21 +90,52 @@ public class XmppRoomManager {
      * @param password 聊天室密码
      * @return
      */
-    public MultiUserChat createChatRoom(XMPPTCPConnection connection, EntityBareJid jid, String nickName, String password) {
+    public MultiUserChat createChatRoom(XMPPTCPConnection connection, String jid, String nickName, String password) {
         try {
-            Resourcepart resourcepart = Resourcepart.from(nickName);
-            // Get the MultiUserChatManager
             MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
-            // Create a MultiUserChat using an XMPPConnection for a room
             MultiUserChat muc = manager.getMultiUserChat(jid);
-            // Prepare a list of owners of the new room
-            Set<Jid> owners = JidUtil.jidSetFrom(new String[] { connection.getUser().asEntityBareJidString() });
             // Create the room
-            muc.create(resourcepart)
-                    .getConfigFormManager()
-                    .setRoomOwners(owners)
-                    .setAndEnablePassword(password)
-                    .submitConfigurationForm();
+            muc.create(nickName);
+            Form form = muc.getConfigurationForm();
+            // 根据原始表单创建一个要提交的新表单。
+            Form submitForm = form.createAnswerForm();
+            // 向要提交的表单添加默认答复
+            for (Iterator<FormField> fields = (Iterator<FormField>) form.getFields(); fields.hasNext();) {
+                FormField field = (FormField) fields.next();
+                if (!FormField.Type.hidden.equals(field.getType())
+                        && field.getVariable() != null) {
+                    // 设置默认值作为答复
+                    submitForm.setDefaultAnswer(field.getVariable());
+                }
+            }
+            // 设置聊天室的新拥有者
+            List<String> owners = new ArrayList<String>();
+            owners.add(connection.getUser());// 用户JID
+            submitForm.setAnswer("muc#roomconfig_roomowners", owners);
+            // 设置聊天室是持久聊天室，即将要被保存下来
+            submitForm.setAnswer("muc#roomconfig_persistentroom", true);
+            // 房间仅对成员开放
+            submitForm.setAnswer("muc#roomconfig_membersonly", false);
+            // 允许占有者邀请其他人
+            submitForm.setAnswer("muc#roomconfig_allowinvites", true);
+            if (!password.equals("")) {
+                // 进入是否需要密码
+                submitForm.setAnswer("muc#roomconfig_passwordprotectedroom", true);
+                // 设置进入密码
+                submitForm.setAnswer("muc#roomconfig_roomsecret", password);
+            }
+            // 能够发现占有者真实 JID 的角色
+            // submitForm.setAnswer("muc#roomconfig_whois", "anyone");
+            // 登录房间对话
+            submitForm.setAnswer("muc#roomconfig_enablelogging", true);
+            // 仅允许注册的昵称登录
+            submitForm.setAnswer("x-muc#roomconfig_reservednick", true);
+            // 允许使用者修改昵称
+            submitForm.setAnswer("x-muc#roomconfig_canchangenick", false);
+            // 允许用户注册房间
+            submitForm.setAnswer("x-muc#roomconfig_registration", false);
+            // 发送已完成的表单（有默认值）到服务器来配置聊天室
+            muc.sendConfigurationForm(submitForm);
             return muc;
         } catch (Exception e) {
             e.printStackTrace();
@@ -130,21 +150,19 @@ public class XmppRoomManager {
      * @param password 聊天室密码 没有密码则传""
      * @return
      */
-    public MultiUserChat join(XMPPTCPConnection connection, EntityBareJid jid, String nickName, String password) {
+    public MultiUserChat join(XMPPTCPConnection connection, String jid, String nickName, String password) {
         try {
-            Resourcepart resourcepart = Resourcepart.from(nickName);
             // 使用XMPPConnection创建一个MultiUserChat窗口
             MultiUserChat muc = MultiUserChatManager.getInstanceFor(connection).getMultiUserChat(jid);
             // 聊天室服务将会决定要接受的历史记录数量
-            MucEnterConfiguration configuration = muc.getEnterConfigurationBuilder(resourcepart)
-                    .requestMaxCharsHistory(0)
-                    .withPassword(password)
-                    .timeoutAfter(connection.getPacketReplyTimeout())
-                    .build();
+            DiscussionHistory history = new DiscussionHistory();
+            history.setMaxChars(0);
+            history.setSince(new Date());
             // 用户加入聊天室
-            muc.join(configuration);
+            muc.join(nickName, password, history,
+                    SmackConfiguration.getDefaultPacketReplyTimeout());
             return muc;
-        } catch (XMPPException | XmppStringprepException | InterruptedException | SmackException e) {
+        } catch (XMPPException | SmackException e) {
             e.printStackTrace();
             return null;
         }
@@ -159,28 +177,24 @@ public class XmppRoomManager {
      * @param password
      * @return
      */
-    public MultiUserChat invitations(XMPPTCPConnection connection, EntityBareJid mucJid, EntityBareJid otherJid, String nickName, String password){
+    public MultiUserChat invitations(XMPPTCPConnection connection, String mucJid, String otherJid, String nickName, String password){
         try {
-            Resourcepart resourcepart = Resourcepart.from(nickName);
             MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
             MultiUserChat muc2 = manager.getMultiUserChat(mucJid);
-            muc2.join(resourcepart);
+            muc2.join(nickName);
             // 监听房间邀请或拒绝邀请
             muc2.addInvitationRejectionListener(new InvitationRejectionListener() {
                 @Override
-                public void invitationDeclined(EntityBareJid invitee, String reason, Message message, MUCUser.Decline rejection) {
+                public void invitationDeclined(String invitee, String reason) {
 
                 }
             });
             // 邀请otherJid用户加入聊天室
             muc2.invite(otherJid, "Meet me in this excellent room");
             return muc2;
-        } catch (XmppStringprepException
-                | SmackException.NoResponseException
+        } catch (SmackException.NoResponseException
                 | XMPPException.XMPPErrorException
-                | SmackException.NotConnectedException
-                | InterruptedException
-                | MultiUserChatException.NotAMucServiceException e) {
+                | SmackException.NotConnectedException e) {
             e.printStackTrace();
             return null;
         }
@@ -192,12 +206,12 @@ public class XmppRoomManager {
      * @param mucJid
      * @return
      */
-    public MultiUserChat changesOnRoomSubject(XMPPTCPConnection connection, EntityBareJid mucJid){
+    public MultiUserChat changesOnRoomSubject(XMPPTCPConnection connection, String mucJid){
         MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
         MultiUserChat muc2 = manager.getMultiUserChat(mucJid);
         muc2.addSubjectUpdatedListener(new SubjectUpdatedListener() {
             @Override
-            public void subjectUpdated(String subject, EntityFullJid from) {
+            public void subjectUpdated(String subject, String from) {
                 // 监听聊天室的主题变更
             }
         });
@@ -205,8 +219,7 @@ public class XmppRoomManager {
             muc2.changeSubject("New Subject");
         } catch (SmackException.NoResponseException
                 | XMPPException.XMPPErrorException
-                | SmackException.NotConnectedException
-                | InterruptedException e) {
+                | SmackException.NotConnectedException e) {
             e.printStackTrace();
         }
         return muc2;
@@ -218,14 +231,13 @@ public class XmppRoomManager {
      * @param otherJid
      * @return
      */
-    public boolean queryMucSupport(XMPPTCPConnection connection, EntityBareJid otherJid){
+    public boolean queryMucSupport(XMPPTCPConnection connection, String otherJid){
         boolean supports = false;
         try {
             supports = MultiUserChatManager.getInstanceFor(connection).isServiceEnabled(otherJid);
         } catch (SmackException.NoResponseException
                 | XMPPException.XMPPErrorException
-                | SmackException.NotConnectedException
-                | InterruptedException e) {
+                | SmackException.NotConnectedException e) {
             e.printStackTrace();
         }
         return supports;
@@ -237,15 +249,14 @@ public class XmppRoomManager {
      * @param userJid
      * @return
      */
-    public List<EntityBareJid> queryMucRooms(XMPPTCPConnection connection, EntityBareJid userJid){
+    public List<String> queryMucRooms(XMPPTCPConnection connection, String userJid){
         MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
-        List<EntityBareJid> joinedRooms = new ArrayList<>();
+        List<String> joinedRooms = new ArrayList<>();
         try {
              joinedRooms = manager.getJoinedRooms(userJid);
         } catch (SmackException.NoResponseException
                 | XMPPException.XMPPErrorException
-                | SmackException.NotConnectedException
-                | InterruptedException e) {
+                | SmackException.NotConnectedException e) {
             e.printStackTrace();
         }
         return joinedRooms;
@@ -257,7 +268,7 @@ public class XmppRoomManager {
      * @param mucJid
      * @return
      */
-    public RoomInfo queryMucRoomInfo(XMPPTCPConnection connection, EntityBareJid mucJid){
+    public RoomInfo queryMucRoomInfo(XMPPTCPConnection connection, String mucJid){
         MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
         RoomInfo info = null;
         try {
@@ -266,8 +277,7 @@ public class XmppRoomManager {
             System.out.println("Room Subject:" + info.getSubject());
         } catch (SmackException.NoResponseException
                 | XMPPException.XMPPErrorException
-                | SmackException.NotConnectedException
-                | InterruptedException e) {
+                | SmackException.NotConnectedException e) {
             e.printStackTrace();
         }
         return info;

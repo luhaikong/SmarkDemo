@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">SmarkDemo</string>
+
+    <string name="act_login_title">登 录</string>
+    <string name="act_login_btn_login">登 录</string>
+    <string name="act_login_hint_userAccount">请输入用户名</string>
+    <string name="act_login_hint_userPassword">请输入密码</string>
+
+    <string name="act_chat_title">好友昵称</string>
+
 </resources>

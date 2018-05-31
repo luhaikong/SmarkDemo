@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.smack.LoginActivity">
+
+    <LinearLayout
+        android:layout_marginTop="16dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <EditText
+            android:id="@+id/et_userAccount"
+            android:hint="@string/act_login_hint_userAccount"
+            android:drawableLeft="@mipmap/ic_launcher_round"
+            android:drawableStart="@mipmap/ic_launcher_round"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <EditText
+            android:id="@+id/et_userPassword"
+            android:hint="@string/act_login_hint_userPassword"
+            android:drawableLeft="@mipmap/ic_launcher_round"
+            android:drawableStart="@mipmap/ic_launcher_round"
+            android:inputType="textPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:layout_marginTop="10dp"
+            android:id="@+id/btn_login"
+            android:text="@string/act_login_btn_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:layout_marginTop="10dp"
+            android:id="@+id/btn_loginOut"
+            android:text="退 出"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    tools:context="com.smack.MainActivity">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:title="@string/act_chat_title"
+        app:titleTextColor="@android:color/white"
+        android:titleTextColor="@android:color/white"
+        android:background="@color/colorPrimary"
+        android:minHeight="?attr/actionBarSize">
+    </android.support.v7.widget.Toolbar>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:scrollbars="vertical"
+        android:overScrollMode="ifContentScrolls"
+        android:layout_below="@+id/toolbar"
+        android:layout_above="@+id/rl_actions"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </android.support.v7.widget.RecyclerView>
+
+    <RelativeLayout
+        android:background="@drawable/bg_bottom_actions"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/rl_actions"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="60dp">
+        <EditText
+            android:id="@+id/et_content"
+            android:layout_toLeftOf="@+id/btn_send"
+            android:layout_toStartOf="@+id/btn_send"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <Button
+            android:id="@+id/btn_send"
+            android:text="发送"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_width="80dp"
+            android:layout_height="match_parent" />
+    </RelativeLayout>
+</RelativeLayout>
