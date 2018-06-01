@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.addItemDecoration(new DividerItemDecoration(mContext,LinearLayoutManager.HORIZONTAL));
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(mContext,LinearLayoutManager.VERTICAL));
         mAdapter = new RosterAdapter(this,mList);
 
         mRecyclerView.setAdapter(mAdapter);
