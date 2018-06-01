@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.smack.utils.ShortcutBadgerUtil;
 import com.smack.xmpp.XmppConnectionFlag;
 import com.smack.xmpp.XmppConnectionManager;
 
@@ -69,6 +70,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 break;
             case R.id.btn_loginOut:
                 XmppConnectionManager.newInstance().logout(null);
+                ShortcutBadgerUtil.startBadgeService(getApplicationContext(),68);
                 break;
             default:
                 break;
