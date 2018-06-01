@@ -2,6 +2,7 @@ package com.smack.xmpp;
 
 import com.smack.xmppwrap.xmppentity.ItemFriend;
 
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.roster.RosterGroup;
@@ -38,7 +39,7 @@ public class XmppRosterManager {
         return roster.getUnfiledEntries();
     }
 
-    public List<ItemFriend> getFriendList(XMPPTCPConnection connection){
+    public List<ItemFriend> getFriendList(XMPPTCPConnection connection, String jid){
         Set<RosterEntry> set = getUnfiledEntries(connection);
         rosterList = new ArrayList<>();
         ItemFriend itemFriend = new ItemFriend();
@@ -70,6 +71,9 @@ public class XmppRosterManager {
                 }
             }
         }
+
+        Roster roster = Roster.getInstanceFor(connection);
+        List<Presence> listAll = roster.getAllPresences(jid);
 
         return rosterList;
     }

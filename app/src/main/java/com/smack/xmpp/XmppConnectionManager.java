@@ -316,11 +316,33 @@ public class XmppConnectionManager {
         });
     }
 
+    public void addChatListener(final Handler handler){
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                XmppMsgManager.newInstance().initListener(connection,new InComeMsgListenerImp(connection),handler);
+            }
+        });
+    }
+
+    public void sendMessageSin(final Handler handler, final String toJid){
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                XmppMsgManager.newInstance().sendMessage(connection,toJid);
+            }
+        });
+    }
+
+    public void sendMessageMuc(){
+
+    }
+
     public void getFriendList(final Handler handler){
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                List<ItemFriend> list = XmppRosterManager.newInstance().getFriendList(connection);
+                List<ItemFriend> list = XmppRosterManager.newInstance().getFriendList(connection,connection.getUser());
                 if (handler!=null){
                     Message message = new Message();
                     message.what = XmppConnectionFlag.KEY_FRIENDS_SUCCESS;
@@ -430,7 +452,7 @@ public class XmppConnectionManager {
         @Override
         public void authenticated(XMPPConnection connection, boolean resumed) {
             Log.d("ImConnectionListener","authenticated");
-            XmppMsgManager.newInstance().initListener((XMPPTCPConnection) connection);
+            XmppMsgManager.newInstance().initListener((XMPPTCPConnection) connection,new InComeMsgListenerImp((XMPPTCPConnection) connection),null);
         }
 
         /**

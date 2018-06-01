@@ -1,5 +1,7 @@
 package com.smack.xmpp;
 
+import android.os.Handler;
+
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPException;
@@ -19,6 +21,7 @@ import org.jivesoftware.smackx.jiveproperties.JivePropertiesManager;
 import org.jivesoftware.smackx.offline.OfflineMessageManager;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -59,16 +62,23 @@ public class XmppMsgManager {
     /**
      * 初始化聊天消息监听
      */
-    public void initListener(XMPPTCPConnection connection) {
+    public void initListener(XMPPTCPConnection connection, final InComeMsgListener listener, final Handler handler) {
         ChatManager chatManager = ChatManager.getInstanceFor(connection);
+        if (chatManager.getChatListeners()!=null){
+            Set<ChatManagerListener> set = chatManager.getChatListeners();
+            for (ChatManagerListener aSet : set) {
+                chatManager.removeChatListener(aSet);
+            }
+        }
         chatManager.addChatListener(new ChatManagerListener() {
             @Override
             public void chatCreated(Chat chat, boolean createdLocally) {
                 chat.addMessageListener(new ChatMessageListener() {
                     @Override
                     public void processMessage(Chat chat, Message message) {
-                        String body = message.getBody();
-                        System.out.println("processMessage"+body);
+                        if (listener!=null){
+                            listener.processMessage(chat,message,handler);
+                        }
                     }
                 });
             }
@@ -83,16 +93,9 @@ public class XmppMsgManager {
     public void sendMessage(XMPPTCPConnection connection,String jid){
         try {
             ChatManager chatManager =  ChatManager.getInstanceFor(connection);
-            chatManager.addChatListener(new ChatManagerListener() {
-                @Override
-                public void chatCreated(Chat chat, boolean createdLocally) {
-                    System.out.println("chatCreated");
-                }
-            });
             Chat chat = chatManager.createChat(jid);
             Message newMessage = new Message();
             newMessage.setBody("Howdy!");
-            // Additional modifications to the message Stanza.
             JivePropertiesManager.addProperty(newMessage, "favoriteColor", "red");
             chat.sendMessage(newMessage);
         } catch (SmackException.NotConnectedException e) {

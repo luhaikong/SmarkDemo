@@ -10,6 +10,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.Toast;
 
 import com.smack.adapter.RosterAdapter;
 import com.smack.xmpp.XmppConnectionFlag;
@@ -63,14 +64,48 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        XmppConnectionManager.newInstance().addChatListener(new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                switch (msg.what){
+                    case XmppConnectionFlag.KEY_CHATCREATED_SUCCESS:
+                        Bundle bundle = msg.getData();
+                        String body = bundle.getString(XmppConnectionFlag.KEY_CHATCREATED_SUCCESS_PARAMS);
+                        Toast.makeText(mContext,body,Toast.LENGTH_LONG).show();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
     }
 
     private void initRecyclerView(){
-        LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
+        final LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.addItemDecoration(new DividerItemDecoration(mContext,LinearLayoutManager.VERTICAL));
         mAdapter = new RosterAdapter(this,mList);
+        mAdapter.setOnItemOnClickListener(new RosterAdapter.OnItemOnClickListener() {
+            @Override
+            public void onClick(ItemFriend friend) {
+                XmppConnectionManager.newInstance().sendMessageSin(new Handler(){
+                    @Override
+                    public void handleMessage(Message msg) {
+                        super.handleMessage(msg);
+                        switch (msg.what){
+                            case XmppConnectionFlag.KEY_SENDMESSAGESIN_SUCCESS:
+                                Toast.makeText(mContext,"sendMessageSin",Toast.LENGTH_LONG).show();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                },friend.getUser());
+            }
+        });
 
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.scrollToPosition(mAdapter.getItemCount()-1);

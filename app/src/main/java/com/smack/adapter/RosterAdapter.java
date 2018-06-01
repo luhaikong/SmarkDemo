@@ -17,13 +17,23 @@ import java.util.List;
  * Created by MyPC on 2018/5/30.
  */
 
-public class RosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class RosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
 
     private static final int VH_GROUP = 100;
     private static final int VH_ITEM = 200;
 
     private Context cxt;
     private List<ItemFriend> rosterEntries;
+
+    private OnItemOnClickListener onItemOnClickListener;
+
+    public interface OnItemOnClickListener{
+        void onClick(ItemFriend friend);
+    }
+
+    public void setOnItemOnClickListener(OnItemOnClickListener onItemOnClickListener) {
+        this.onItemOnClickListener = onItemOnClickListener;
+    }
 
     public RosterAdapter(Context cxt, List<ItemFriend> rosterEntries) {
         this.cxt = cxt;
@@ -46,13 +56,21 @@ public class RosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        ItemFriend entry = rosterEntries.get(position);
+        final ItemFriend entry = rosterEntries.get(position);
         if (holder instanceof VHGroup){
             VHGroup vHGroup = (VHGroup) holder;
             vHGroup.tv_content.setText(entry.getName());
         } else if (holder instanceof VHItem){
             VHItem vHItem = (VHItem) holder;
             vHItem.tv_NickNameToRemark.setText(entry.getName()+"["+entry.getUser()+"]");
+            vHItem.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (onItemOnClickListener!=null){
+                        onItemOnClickListener.onClick(entry);
+                    }
+                }
+            });
         }
     }
 

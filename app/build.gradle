@@ -17,6 +17,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    packagingOptions {
+        exclude 'META-INF/NOTICE' // will not include NOTICE file
+        exclude 'META-INF/LICENSE' // will not include LICENSE file
+        exclude 'META-INF/DEPENDENCIES' // will not include DEPENDENCIES file
+        exclude 'META-INF/maven.org.slf4j.slf4j-api/pom.xml'
+        exclude 'META-INF/maven.org.slf4j.slf4j-api/pom.properties'
+    }
 }
 
 dependencies {
@@ -27,15 +35,17 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
-//    compile "org.igniterealtime.smack:smack-android-extensions:4.2.0"
-//    compile "org.igniterealtime.smack:smack-experimental:4.2.0"
-//    compile "org.igniterealtime.smack:smack-tcp:4.2.0"
-
-    compile "org.igniterealtime.smack:smack-tcp:4.1.1"
-    compile "org.igniterealtime.smack:smack-android-extensions:4.1.1"
-    compile "org.igniterealtime.smack:smack-experimental:4.1.1"
-
+    //    compile "org.igniterealtime.smack:smack-android-extensions:4.2.0"
+    //    compile "org.igniterealtime.smack:smack-experimental:4.2.0"
+    //    compile "org.igniterealtime.smack:smack-tcp:4.2.0"
+    compile 'org.igniterealtime.smack:smack-tcp:4.1.1'
+    compile 'org.igniterealtime.smack:smack-android-extensions:4.1.1'
+    compile 'org.igniterealtime.smack:smack-experimental:4.1.1'
     compile 'com.android.support:recyclerview-v7:25.3.1'
     compile 'com.android.support:support-vector-drawable:25.3.1'
-    compile "me.leolin:ShortcutBadger:1.1.21@aar"
+    compile 'me.leolin:ShortcutBadger:1.1.21@aar'
+
+    compile group: 'org.apache.rocketmq', name: 'rocketmq-client', version: '4.2.0'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.7'
+
 }
