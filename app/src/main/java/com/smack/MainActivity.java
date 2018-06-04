@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                         break;
                 }
             }
-        });
+        },getApplicationContext());
     }
 
     private void initRecyclerView(){

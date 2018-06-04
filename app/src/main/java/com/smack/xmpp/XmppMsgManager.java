@@ -1,6 +1,11 @@
 package com.smack.xmpp;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
+
+import com.smack.receiver.IntentReceiver;
+import com.smack.receiver.SmarkPushReceiver;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.StanzaListener;
@@ -62,7 +67,7 @@ public class XmppMsgManager {
     /**
      * 初始化聊天消息监听
      */
-    public void initListener(XMPPTCPConnection connection, final InComeMsgListener listener, final Handler handler) {
+    public void initListener(final XMPPTCPConnection connection, final InComeMsgListener listener, final Handler handler, final Context context) {
         ChatManager chatManager = ChatManager.getInstanceFor(connection);
         if (chatManager.getChatListeners()!=null){
             Set<ChatManagerListener> set = chatManager.getChatListeners();
@@ -78,6 +83,11 @@ public class XmppMsgManager {
                     public void processMessage(Chat chat, Message message) {
                         if (listener!=null){
                             listener.processMessage(chat,message,handler);
+                        }
+                        if (context!=null){
+                            Intent intent = new Intent(IntentReceiver.MESSAGE_RECEIVED);
+                            intent.putExtra(SmarkPushReceiver.BUNDLEEXTRA,message.getBody());
+                            context.sendBroadcast(intent);
                         }
                     }
                 });

@@ -1,11 +1,14 @@
 package com.smack.xmpp;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.smack.receiver.IntentReceiver;
 import com.smack.xmppwrap.xmppentity.ItemFriend;
 
 import org.jivesoftware.smack.ConnectionListener;
@@ -36,6 +39,7 @@ import java.util.concurrent.ThreadFactory;
 
 public class XmppConnectionManager {
 
+    private Context ofContext;
     private XMPPTCPConnection connection;
     private boolean isLogoutNormal = false;//是否是正常退出
 
@@ -287,11 +291,13 @@ public class XmppConnectionManager {
         });
     }
 
-    public void initConnectionAndLogin(final Handler handler, String userName, String password) {
+    public void initConnectionAndLogin(final Handler handler, String userName, String password, Context context) {
         this.ofUserName = userName;
         this.ofPassword = password;
+        this.ofContext = context;
         onImConnectionListener = new OnImConnectionListener();
         onImConnectionListener.setImHander(handler);
+        onImConnectionListener.setImContext(context);
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -316,11 +322,11 @@ public class XmppConnectionManager {
         });
     }
 
-    public void addChatListener(final Handler handler){
+    public void addChatListener(final Handler handler, final Context context){
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                XmppMsgManager.newInstance().initListener(connection,new InComeMsgListenerImp(connection),handler);
+                XmppMsgManager.newInstance().initListener(connection,new InComeMsgListenerImp(connection),handler,context);
             }
         });
     }
@@ -398,9 +404,14 @@ public class XmppConnectionManager {
     public class OnImConnectionListener extends ImConnectionListener{
         Handler imHander;
         Message imMessage;
+        Context imContext;
 
         public void setImHander(Handler imHander) {
             this.imHander = imHander;
+        }
+
+        public void setImContext(Context imContext) {
+            this.imContext = imContext;
         }
 
         public OnImConnectionListener() {
@@ -415,6 +426,10 @@ public class XmppConnectionManager {
                 imMessage.what = XmppConnectionFlag.KEY_CONNECTED;
                 imHander.sendMessage(imMessage);
             }
+            if (imContext!=null){
+                Intent intent = new Intent(IntentReceiver.CONNECTION);
+                imContext.sendBroadcast(intent);
+            }
         }
 
         @Override
@@ -424,6 +439,10 @@ public class XmppConnectionManager {
                 imMessage = new Message();
                 imMessage.what = XmppConnectionFlag.KEY_AUTHENTICATED;
                 imHander.sendMessage(imMessage);
+            }
+            if (imContext!=null){
+                Intent intent = new Intent(IntentReceiver.AUTHENTICATED);
+                imContext.sendBroadcast(intent);
             }
         }
     }
@@ -440,7 +459,6 @@ public class XmppConnectionManager {
          */
         @Override
         public void connected(XMPPConnection connection) {
-            Log.d("ImConnectionListener","connected");
             login(ofUserName,ofPassword);
         }
 
@@ -451,8 +469,7 @@ public class XmppConnectionManager {
          */
         @Override
         public void authenticated(XMPPConnection connection, boolean resumed) {
-            Log.d("ImConnectionListener","authenticated");
-            XmppMsgManager.newInstance().initListener((XMPPTCPConnection) connection,new InComeMsgListenerImp((XMPPTCPConnection) connection),null);
+            XmppMsgManager.newInstance().initListener((XMPPTCPConnection) connection,new InComeMsgListenerImp((XMPPTCPConnection) connection),null,null);
         }
 
         /**
@@ -481,7 +498,6 @@ public class XmppConnectionManager {
          */
         @Override
         public void reconnectionSuccessful() {
-            Log.d("ImConnectionListener","reconnectionSuccessful");
         }
 
         /**
@@ -490,7 +506,6 @@ public class XmppConnectionManager {
          */
         @Override
         public void reconnectingIn(int seconds) {
-            Log.d("ImConnectionListener","reconnectingIn");
         }
 
         /**
@@ -499,7 +514,6 @@ public class XmppConnectionManager {
          */
         @Override
         public void reconnectionFailed(Exception e) {
-            Log.d("ImConnectionListener","reconnectionFailed");
         }
     }
 }

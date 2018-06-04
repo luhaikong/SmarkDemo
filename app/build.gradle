@@ -22,8 +22,6 @@ android {
         exclude 'META-INF/NOTICE' // will not include NOTICE file
         exclude 'META-INF/LICENSE' // will not include LICENSE file
         exclude 'META-INF/DEPENDENCIES' // will not include DEPENDENCIES file
-        exclude 'META-INF/maven.org.slf4j.slf4j-api/pom.xml'
-        exclude 'META-INF/maven.org.slf4j.slf4j-api/pom.properties'
     }
 }
 
@@ -44,8 +42,4 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:25.3.1'
     compile 'com.android.support:support-vector-drawable:25.3.1'
     compile 'me.leolin:ShortcutBadger:1.1.21@aar'
-
-    compile group: 'org.apache.rocketmq', name: 'rocketmq-client', version: '4.2.0'
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.7'
-
 }

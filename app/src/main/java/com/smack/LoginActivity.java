@@ -11,7 +11,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.smack.rocket.RocketManager;
 import com.smack.xmpp.XmppConnectionFlag;
 import com.smack.xmpp.XmppConnectionManager;
 
@@ -66,11 +65,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                                 break;
                         }
                     }
-                },userAccount,userPwd);
+                },userAccount,userPwd,getApplicationContext());
                 break;
             case R.id.btn_loginOut:
-//                XmppConnectionManager.newInstance().logout(null);
-                RocketManager.newInstance().initRocket();
+                XmppConnectionManager.newInstance().logout(null);
                 break;
             default:
                 break;
