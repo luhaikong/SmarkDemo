@@ -268,13 +268,13 @@ public class XmppConnectionManager {
         return config;
     }
 
-    /**
-     * 初始化与服务器的连接
-     * @param handler UI层回调展示结果
-     */
-    public void initConnection(Handler handler) {
+    public void initConnection(Context context){
+        this.ofContext = context;
+        if (onImConnectionListener!=null){
+            connection.removeConnectionListener(onImConnectionListener);
+        }
         onImConnectionListener = new OnImConnectionListener();
-        onImConnectionListener.setImHander(handler);
+        onImConnectionListener.setImContext(context);
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -283,6 +283,10 @@ public class XmppConnectionManager {
                         connection = new XMPPTCPConnection(getConfiguration());
                         connection.addConnectionListener(onImConnectionListener);
                         connection.connect();
+                    } else {
+                        if (!connection.isAuthenticated()){
+                            login(ofUserName,ofPassword);
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -291,10 +295,17 @@ public class XmppConnectionManager {
         });
     }
 
+    /**
+     * 初始化与服务器的连接
+     * @param handler UI层回调展示结果
+     */
     public void initConnectionAndLogin(final Handler handler, String userName, String password, Context context) {
         this.ofUserName = userName;
         this.ofPassword = password;
         this.ofContext = context;
+        if (onImConnectionListener!=null){
+            connection.removeConnectionListener(onImConnectionListener);
+        }
         onImConnectionListener = new OnImConnectionListener();
         onImConnectionListener.setImHander(handler);
         onImConnectionListener.setImContext(context);
