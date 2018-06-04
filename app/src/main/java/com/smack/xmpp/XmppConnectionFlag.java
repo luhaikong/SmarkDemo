@@ -42,9 +42,11 @@ public class XmppConnectionFlag {
     public final static String KEY_FRIENDS_SUCCESS_PARAMS = "params";
     public final static int KEY_FRIENDS_FAIL = 18;
 
+    //接收消息状态码
     public final static int KEY_CHATCREATED_SUCCESS = 19;
     public final static String KEY_CHATCREATED_SUCCESS_PARAMS = "params";
 
+    //发送消息状态码
     public final static int KEY_SENDMESSAGESIN_SUCCESS = 20;
     public final static String KEY_SENDMESSAGESIN_SUCCESS_PARAMS = "params";
 }

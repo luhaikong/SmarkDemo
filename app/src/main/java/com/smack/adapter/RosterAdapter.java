@@ -9,7 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.smack.R;
-import com.smack.xmppwrap.xmppentity.ItemFriend;
+import com.smack.xmppentity.ItemFriend;
 
 import java.util.List;
 

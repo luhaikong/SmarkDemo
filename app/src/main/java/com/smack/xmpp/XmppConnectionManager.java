@@ -9,7 +9,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.smack.receiver.IntentReceiver;
-import com.smack.xmppwrap.xmppentity.ItemFriend;
+import com.smack.xmppentity.ItemFriend;
 
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackException;
@@ -400,14 +400,15 @@ public class XmppConnectionManager {
 
     /**
      * ImConnectionListener类的子类，ConnectionListener接口的扩展类
+     * 可注入Handler和Broadcast
      */
     public class OnImConnectionListener extends ImConnectionListener{
-        Handler imHander;
+        Handler imHandler;
         Message imMessage;
         Context imContext;
 
-        public void setImHander(Handler imHander) {
-            this.imHander = imHander;
+        public void setImHander(Handler imHandler) {
+            this.imHandler = imHandler;
         }
 
         public void setImContext(Context imContext) {
@@ -421,13 +422,13 @@ public class XmppConnectionManager {
         @Override
         public void connected(XMPPConnection connection) {
             super.connected(connection);
-            if (imHander!=null){
+            if (imHandler!=null){
                 imMessage = new Message();
                 imMessage.what = XmppConnectionFlag.KEY_CONNECTED;
-                imHander.sendMessage(imMessage);
+                imHandler.sendMessage(imMessage);
             }
             if (imContext!=null){
-                Intent intent = new Intent(IntentReceiver.CONNECTION);
+                Intent intent = new Intent(IntentReceiver.IntentEnum.CONNECTION);
                 imContext.sendBroadcast(intent);
             }
         }
@@ -435,20 +436,20 @@ public class XmppConnectionManager {
         @Override
         public void authenticated(XMPPConnection connection, boolean resumed) {
             super.authenticated(connection, resumed);
-            if (imHander!=null){
+            if (imHandler!=null){
                 imMessage = new Message();
                 imMessage.what = XmppConnectionFlag.KEY_AUTHENTICATED;
-                imHander.sendMessage(imMessage);
+                imHandler.sendMessage(imMessage);
             }
             if (imContext!=null){
-                Intent intent = new Intent(IntentReceiver.AUTHENTICATED);
+                Intent intent = new Intent(IntentReceiver.IntentEnum.AUTHENTICATED);
                 imContext.sendBroadcast(intent);
             }
         }
     }
 
     /**
-     * ConnectionListener接口的实现类
+     * ConnectionListener接口的实现类,仅负责子线程中的操作
      */
     class ImConnectionListener implements ConnectionListener{
 

@@ -8,7 +8,7 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 
 /**
- *
+ * 注入了handler的监听器实现类
  * @author MyPC
  * @date 2018/6/1
  */

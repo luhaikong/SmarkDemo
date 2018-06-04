@@ -1,4 +1,4 @@
-package com.smack.xmppwrap.xmppentity;
+package com.smack.xmppentity;
 
 import java.io.Serializable;
 

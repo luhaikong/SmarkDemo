@@ -1,6 +1,6 @@
 package com.smack.xmpp;
 
-import com.smack.xmppwrap.xmppentity.ItemFriend;
+import com.smack.xmppentity.ItemFriend;
 
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;

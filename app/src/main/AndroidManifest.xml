@@ -39,6 +39,7 @@
 
         <receiver
             android:name="com.smack.receiver.SmarkPushReceiver"
+            android:exported="false"
             android:enabled="true">
             <intent-filter>
                 <!--Required 用户注册SDK的intent-->

@@ -65,7 +65,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                                 break;
                         }
                     }
-                },userAccount,userPwd,getApplicationContext());
+                }, userAccount, userPwd, getApplicationContext());
                 break;
             case R.id.btn_loginOut:
                 XmppConnectionManager.newInstance().logout(null);

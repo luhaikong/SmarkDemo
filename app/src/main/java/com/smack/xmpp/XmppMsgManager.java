@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Handler;
 
 import com.smack.receiver.IntentReceiver;
-import com.smack.receiver.SmarkPushReceiver;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.StanzaListener;
@@ -85,8 +84,8 @@ public class XmppMsgManager {
                             listener.processMessage(chat,message,handler);
                         }
                         if (context!=null){
-                            Intent intent = new Intent(IntentReceiver.MESSAGE_RECEIVED);
-                            intent.putExtra(SmarkPushReceiver.BUNDLEEXTRA,message.getBody());
+                            Intent intent = new Intent(IntentReceiver.IntentEnum.MESSAGE_RECEIVED);
+                            intent.putExtra(IntentReceiver.EXTRA,message.getBody());
                             context.sendBroadcast(intent);
                         }
                     }

@@ -15,7 +15,7 @@ import android.widget.Toast;
 import com.smack.adapter.RosterAdapter;
 import com.smack.xmpp.XmppConnectionFlag;
 import com.smack.xmpp.XmppConnectionManager;
-import com.smack.xmppwrap.xmppentity.ItemFriend;
+import com.smack.xmppentity.ItemFriend;
 
 import java.util.ArrayList;
 import java.util.List;

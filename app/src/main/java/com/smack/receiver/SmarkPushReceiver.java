@@ -13,20 +13,18 @@ import android.util.Log;
 
 public class SmarkPushReceiver extends BroadcastReceiver {
 
-    public final static String BUNDLEEXTRA = "BundleExtra";
-
     @Override
     public void onReceive(Context context, Intent intent) {
         String content = "";
         switch (intent.getAction()){
-            case IntentReceiver.CONNECTION:
+            case IntentReceiver.IntentEnum.CONNECTION:
                 content = "云网推送连接成功";
                 break;
-            case IntentReceiver.AUTHENTICATED:
+            case IntentReceiver.IntentEnum.AUTHENTICATED:
                 content = "云网推送认证成功";
                 break;
-            case IntentReceiver.MESSAGE_RECEIVED:
-                content = intent.getStringExtra(BUNDLEEXTRA);
+            case IntentReceiver.IntentEnum.MESSAGE_RECEIVED:
+                content = intent.getStringExtra(IntentReceiver.EXTRA);
                 break;
             default:
                 break;

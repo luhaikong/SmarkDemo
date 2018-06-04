@@ -12,5 +12,6 @@ import org.jivesoftware.smack.packet.Message;
  */
 
 public interface InComeMsgListener {
+
     void processMessage(Chat chat, Message message, Handler handler);
 }
