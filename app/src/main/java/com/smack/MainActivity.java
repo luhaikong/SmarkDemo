@@ -65,21 +65,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        XmppConnectionManager.newInstance().addChatListener(new Handler(){
-            @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-                switch (msg.what){
-                    case XmppConnectionFlag.KEY_CHATCREATED_SUCCESS:
-                        Bundle bundle = msg.getData();
-                        String body = bundle.getString(XmppConnectionFlag.KEY_CHATCREATED_SUCCESS_PARAMS);
-                        Toast.makeText(mContext,body,Toast.LENGTH_LONG).show();
-                        break;
-                    default:
-                        break;
-                }
-            }
-        },getApplicationContext());
     }
 
     private void initRecyclerView(){

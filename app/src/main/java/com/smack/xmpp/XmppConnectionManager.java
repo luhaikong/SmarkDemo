@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.smack.receiver.IntentReceiver;
+import com.smack.service.SmackPushCallBack;
 import com.smack.xmppentity.ItemFriend;
 
 import org.jivesoftware.smack.ConnectionListener;
@@ -27,7 +28,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -40,12 +40,11 @@ import java.util.concurrent.ThreadFactory;
 public class XmppConnectionManager {
 
     private Context ofContext;
+    private XmppUserConfig ofXmppUserConfig;
     private XMPPTCPConnection connection;
     private boolean isLogoutNormal = false;//是否是正常退出
-
-    private String ofUserName, ofPassword;
-
     private ScheduledExecutorService executorService;
+    private SmackPushCallBack smackPushCallBack;
 
     private static class Holder {
         private static XmppConnectionManager singleton = new XmppConnectionManager();
@@ -64,6 +63,14 @@ public class XmppConnectionManager {
                 return thread;
             }
         });
+    }
+
+    public XmppUserConfig getOfXmppUserConfig() {
+        return ofXmppUserConfig;
+    }
+
+    public void setOfXmppUserConfig(XmppUserConfig ofXmppUserConfig) {
+        this.ofXmppUserConfig = ofXmppUserConfig;
     }
 
     private void sendHandlerMsg(int what, Handler conHandler){
@@ -143,18 +150,18 @@ public class XmppConnectionManager {
     /**
      * 登录
      * 登陆成功需要调用-获取离线消息
-     * @param userName 用户名
-     * @param password 密码
      */
-    public void login(final String userName, final String password) {
-        ofUserName = userName;
-        ofPassword = password;
+    public void login() {
         executorService.submit(new Runnable() {
             @Override
             public void run() {
                 try {
-                    connection.login(userName, password);
-                    // TODO 获取离线消息
+                    if (!connection.isAuthenticated()){
+                        connection.login(ofXmppUserConfig.getOfUserName(), ofXmppUserConfig.getOfPassword());
+                        // TODO 获取离线消息
+                    } else {
+                        smackPushCallBack.authenticated();
+                    }
                 } catch (XMPPException | SmackException | IOException e) {
                     e.printStackTrace();
                 }
@@ -199,6 +206,7 @@ public class XmppConnectionManager {
             public void run() {
                 try {
                     AccountManager manager = AccountManager.getInstance(connection);
+                    manager.sensitiveOperationOverInsecureConnection(true);
                     manager.changePassword(newPassword);
                     sendHandlerMsg(XmppConnectionFlag.KEY_CHANGEPASSWORD_SUCCESS,handler);
                 } catch (Exception e) {
@@ -211,29 +219,77 @@ public class XmppConnectionManager {
 
     /**
      * 创建一个新用户
-     *
-     * @param username 用户名
-     * @param password 密码
-     * @param attr     一些用户资料
+     * @param smackPushCallBack
      * @see AccountManager
      */
-    public void registerAccount(final String username, final String password, final Map<String, String> attr, final Handler handler) {
+    public void registerAccount(final SmackPushCallBack smackPushCallBack) {
         executorService.submit(new Runnable() {
             @Override
             public void run() {
                 AccountManager manager = AccountManager.getInstance(connection);
+                manager.sensitiveOperationOverInsecureConnection(true);
                 try {
-                    if (attr == null) {
-                        manager.createAccount(username, password);
+                    if (ofXmppUserConfig.getAttr() == null) {
+                        manager.createAccount(ofXmppUserConfig.getOfUserName(), ofXmppUserConfig.getOfPassword());
                     } else {
-                        manager.createAccount(username, password, attr);
+                        manager.createAccount(ofXmppUserConfig.getOfUserName(), ofXmppUserConfig.getOfPassword());
                     }
-                    sendHandlerMsg(XmppConnectionFlag.KEY_REGISTER_SUCCESS,handler);
+                    login();
+                    if (smackPushCallBack!=null){
+                        smackPushCallBack.registerAccount(true,"");
+                    }
+                    if (ofContext!=null){
+                        Intent intent = new Intent(IntentReceiver.IntentEnum.REGISTRATION);
+                        ofContext.sendBroadcast(intent);
+                    }
                 } catch (SmackException.NoResponseException
                         |XMPPException.XMPPErrorException
                         |SmackException.NotConnectedException e){
                     e.printStackTrace();
-                    sendHandlerMsg(XmppConnectionFlag.KEY_REGISTER_FAIL,handler);
+                    if (smackPushCallBack!=null){
+                        smackPushCallBack.registerAccount(false,e.getMessage());
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * 创建一个新用户,然后登录
+     * @see AccountManager
+     */
+    private void registerAccount(){
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                AccountManager manager = AccountManager.getInstance(connection);
+                manager.sensitiveOperationOverInsecureConnection(true);
+                try {
+                    if (ofXmppUserConfig.getAttr() == null) {
+                        manager.createAccount(ofXmppUserConfig.getOfUserName(), ofXmppUserConfig.getOfPassword());
+                    } else {
+                        manager.createAccount(ofXmppUserConfig.getOfUserName(), ofXmppUserConfig.getOfPassword(), ofXmppUserConfig.getAttr());
+                    }
+                    login();
+                    if (smackPushCallBack!=null){
+                        smackPushCallBack.registerAccount(true,"createAccount success！");
+                    }
+                    if (ofContext!=null){
+                        Intent intent = new Intent(IntentReceiver.IntentEnum.REGISTRATION);
+                        ofContext.sendBroadcast(intent);
+                    }
+                } catch (SmackException.NoResponseException
+                        |XMPPException.XMPPErrorException
+                        |SmackException.NotConnectedException e){
+                    e.printStackTrace();
+                    String message = "XMPPError: conflict - cancel";
+                    if (e instanceof org.jivesoftware.smack.XMPPException && message.equals(e.getMessage())){
+                        login();
+                        return;
+                    }
+                    if (smackPushCallBack!=null){
+                        smackPushCallBack.registerAccount(false,e.getMessage());
+                    }
                 }
             }
         });
@@ -268,46 +324,18 @@ public class XmppConnectionManager {
         return config;
     }
 
-    public void initConnection(Context context){
-        this.ofContext = context;
-        if (onImConnectionListener!=null){
-            connection.removeConnectionListener(onImConnectionListener);
-        }
-        onImConnectionListener = new OnImConnectionListener();
-        onImConnectionListener.setImContext(context);
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (connection == null) {
-                        connection = new XMPPTCPConnection(getConfiguration());
-                        connection.addConnectionListener(onImConnectionListener);
-                        connection.connect();
-                    } else {
-                        if (!connection.isAuthenticated()){
-                            login(ofUserName,ofPassword);
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
     /**
      * 初始化与服务器的连接
-     * @param handler UI层回调展示结果
+     * @param smackPushCallBack 子线程回调展示结果
      */
-    public void initConnectionAndLogin(final Handler handler, String userName, String password, Context context) {
-        this.ofUserName = userName;
-        this.ofPassword = password;
+    public void initConnectionAndLogin(final SmackPushCallBack smackPushCallBack, final Context context) {
         this.ofContext = context;
+        this.smackPushCallBack = smackPushCallBack;
         if (onImConnectionListener!=null){
             connection.removeConnectionListener(onImConnectionListener);
         }
         onImConnectionListener = new OnImConnectionListener();
-        onImConnectionListener.setImHander(handler);
+        onImConnectionListener.setSmackPushCallBack(smackPushCallBack);
         onImConnectionListener.setImContext(context);
         executorService.submit(new Runnable() {
             @Override
@@ -319,11 +347,9 @@ public class XmppConnectionManager {
                         connection.connect();
                     } else {
                         if (!connection.isAuthenticated()){
-                            login(ofUserName,ofPassword);
+                            login();
                         } else {
-                            Message message = new Message();
-                            message.what = XmppConnectionFlag.KEY_AUTHENTICATED;
-                            handler.sendMessage(message);
+                            registerAccount(smackPushCallBack);
                         }
                     }
                 } catch (Exception e) {
@@ -333,11 +359,11 @@ public class XmppConnectionManager {
         });
     }
 
-    public void addChatListener(final Handler handler, final Context context){
+    public void addChatListener(final SmackPushCallBack smackPushCallBack){
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                XmppMsgManager.newInstance().initListener(connection,new InComeMsgListenerImp(connection),handler,context);
+                XmppMsgManager.newInstance().initListener(connection,smackPushCallBack,ofContext);
             }
         });
     }
@@ -411,19 +437,18 @@ public class XmppConnectionManager {
 
     /**
      * ImConnectionListener类的子类，ConnectionListener接口的扩展类
-     * 可注入Handler和Broadcast
+     * 可注入Broadcast
      */
     public class OnImConnectionListener extends ImConnectionListener{
-        Handler imHandler;
-        Message imMessage;
+        SmackPushCallBack smackPushCallBack;
         Context imContext;
-
-        public void setImHander(Handler imHandler) {
-            this.imHandler = imHandler;
-        }
 
         public void setImContext(Context imContext) {
             this.imContext = imContext;
+        }
+
+        public void setSmackPushCallBack(SmackPushCallBack smackPushCallBack) {
+            this.smackPushCallBack = smackPushCallBack;
         }
 
         public OnImConnectionListener() {
@@ -433,10 +458,8 @@ public class XmppConnectionManager {
         @Override
         public void connected(XMPPConnection connection) {
             super.connected(connection);
-            if (imHandler!=null){
-                imMessage = new Message();
-                imMessage.what = XmppConnectionFlag.KEY_CONNECTED;
-                imHandler.sendMessage(imMessage);
+            if (smackPushCallBack!=null){
+                smackPushCallBack.connected();
             }
             if (imContext!=null){
                 Intent intent = new Intent(IntentReceiver.IntentEnum.CONNECTION);
@@ -447,10 +470,8 @@ public class XmppConnectionManager {
         @Override
         public void authenticated(XMPPConnection connection, boolean resumed) {
             super.authenticated(connection, resumed);
-            if (imHandler!=null){
-                imMessage = new Message();
-                imMessage.what = XmppConnectionFlag.KEY_AUTHENTICATED;
-                imHandler.sendMessage(imMessage);
+            if (smackPushCallBack!=null){
+                smackPushCallBack.authenticated();
             }
             if (imContext!=null){
                 Intent intent = new Intent(IntentReceiver.IntentEnum.AUTHENTICATED);
@@ -471,7 +492,7 @@ public class XmppConnectionManager {
          */
         @Override
         public void connected(XMPPConnection connection) {
-            login(ofUserName,ofPassword);
+            registerAccount();
         }
 
         /**
@@ -481,7 +502,7 @@ public class XmppConnectionManager {
          */
         @Override
         public void authenticated(XMPPConnection connection, boolean resumed) {
-            XmppMsgManager.newInstance().initListener((XMPPTCPConnection) connection,new InComeMsgListenerImp((XMPPTCPConnection) connection),null,null);
+            XmppMsgManager.newInstance().initListener((XMPPTCPConnection) connection,smackPushCallBack,ofContext);
         }
 
         /**
@@ -492,7 +513,7 @@ public class XmppConnectionManager {
             if (isLogoutNormal){
                 logout(null);
             } else {
-                login(ofUserName,ofPassword);
+                registerAccount();
             }
         }
 
@@ -502,7 +523,7 @@ public class XmppConnectionManager {
          */
         @Override
         public void connectionClosedOnError(Exception e) {
-            login(ofUserName,ofPassword);
+            registerAccount();
         }
 
         /**

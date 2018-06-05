@@ -30,6 +30,13 @@
 
         <Button
             android:layout_marginTop="10dp"
+            android:id="@+id/btn_register"
+            android:text="注 册"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:layout_marginTop="10dp"
             android:id="@+id/btn_login"
             android:text="@string/act_login_btn_login"
             android:layout_width="match_parent"

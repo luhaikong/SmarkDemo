@@ -20,6 +20,9 @@ public class SmarkPushReceiver extends BroadcastReceiver {
             case IntentReceiver.IntentEnum.CONNECTION:
                 content = "云网推送连接成功";
                 break;
+            case IntentReceiver.IntentEnum.REGISTRATION:
+                content = "云网推送注册成功";
+                break;
             case IntentReceiver.IntentEnum.AUTHENTICATED:
                 content = "云网推送认证成功";
                 break;
