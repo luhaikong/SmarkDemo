@@ -66,12 +66,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void bindSmackPushService(){
-        Intent intent = new Intent(getApplicationContext(), SmackPushService.class);
+        Intent intent = new Intent(mContext, SmackPushService.class);
         bindService(intent,this,BIND_AUTO_CREATE);
     }
 
     private void stopSmackPushService(){
-        Intent intent = new Intent(getApplicationContext(), SmackPushService.class);
+        Intent intent = new Intent(mContext, SmackPushService.class);
         stopService(intent);
     }
 

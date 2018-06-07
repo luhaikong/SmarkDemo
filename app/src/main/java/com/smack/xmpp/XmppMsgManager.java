@@ -84,7 +84,8 @@ public class XmppMsgManager {
                             smackPushCallBack.chatCreated(message.getBody(),createdLocally);
                         }
                         if (context!=null){
-                            Intent intent = new Intent(IntentReceiver.IntentEnum.MESSAGE_RECEIVED);
+                            Intent intent = new Intent();
+                            intent.setAction(IntentReceiver.IntentEnum.NOTIFICATION_RECEIVED);
                             intent.putExtra(IntentReceiver.EXTRA,message.getBody());
                             context.sendBroadcast(intent);
                         }

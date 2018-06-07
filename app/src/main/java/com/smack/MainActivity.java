@@ -1,8 +1,11 @@
 package com.smack;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
@@ -13,20 +16,34 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.smack.adapter.RosterAdapter;
+import com.smack.service.SmackPushCallBack;
+import com.smack.service.SmackPushService;
 import com.smack.xmpp.XmppConnectionFlag;
 import com.smack.xmpp.XmppConnectionManager;
+import com.smack.xmpp.XmppUserConfig;
 import com.smack.xmppentity.ItemFriend;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SmackPushCallBack {
 
     private Toolbar toolbar;
     private RecyclerView mRecyclerView;
     private RosterAdapter mAdapter;
     private List<ItemFriend> mList = new ArrayList<>();
     private Context mContext;
+    private SmackPushService.SmackPushBinder pushBinder;
+
+    private Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            Bundle bundle = msg.getData();
+            String body = bundle.getString("body");
+            Toast.makeText(mContext,body,Toast.LENGTH_SHORT).show();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +82,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        bindSmackPushService();
+    }
+
+    @Override
+    protected void onDestroy() {
+        unbindService(this);
+        super.onDestroy();
+    }
+
+    private void bindSmackPushService(){
+        Intent intent = new Intent(mContext, SmackPushService.class);
+        bindService(intent,this,BIND_AUTO_CREATE);
     }
 
     private void initRecyclerView(){
@@ -94,5 +123,46 @@ public class MainActivity extends AppCompatActivity {
 
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.scrollToPosition(mAdapter.getItemCount()-1);
+    }
+
+    @Override
+    public void connected() {
+
+    }
+
+    @Override
+    public void registerAccount(boolean success, String msg) {
+
+    }
+
+    @Override
+    public void authenticated() {
+
+    }
+
+    @Override
+    public void chatCreated(String content, boolean createdLocally) {
+        Message message = new Message();
+        Bundle bundle = new Bundle();
+        bundle.putString("body",content);
+        message.setData(bundle);
+        handler.sendMessage(message);
+    }
+
+    @Override
+    public void logout(XmppUserConfig config) {
+
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        pushBinder = (SmackPushService.SmackPushBinder) service;
+        SmackPushService pushService = pushBinder.getService();
+        pushService.addChatListener(this);
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+
     }
 }

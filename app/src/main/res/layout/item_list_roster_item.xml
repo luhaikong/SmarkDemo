@@ -25,7 +25,6 @@
             android:id="@+id/tv_NickNameToRemark"
             android:text="王大锤"
             android:padding="5dp"
-            android:maxLength="16"
             android:textStyle="bold"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:layout_width="match_parent"

@@ -41,10 +41,14 @@
 
         <service android:name=".service.SmackPushService"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.smack.service.SmackPushService"/>
+            </intent-filter>
+        </service>
 
         <receiver
-            android:name="com.smack.receiver.SmarkPushReceiver"
+            android:name="com.smack.receiver.SmackPushReceiver"
             android:exported="false"
             android:enabled="true">
             <intent-filter>
@@ -63,6 +67,23 @@
                 <category android:name="com.smack" />
             </intent-filter>
         </receiver>
+
+        <receiver android:name=".receiver.AlarmReceiver">
+            <intent-filter>
+                <!--屏幕点亮或解锁广播-->
+                <action android:name="android.intent.action.USER_PRESENT" />
+                <!--网络状态改变-->
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+            <intent-filter>
+                <!--程序安装广播-->
+                <action android:name="android.intent.action.PACKAGE_ADDED" />
+                <!--程序删除广播-->
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+                <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>
