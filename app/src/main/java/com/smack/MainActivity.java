@@ -21,7 +21,7 @@ import com.smack.service.SmackPushService;
 import com.smack.xmpp.XmppConnectionFlag;
 import com.smack.xmpp.XmppConnectionManager;
 import com.smack.xmpp.XmppUserConfig;
-import com.smack.xmppentity.ItemFriend;
+import com.smack.xmppentity.GroupFriend;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements SmackPushCallBack
     private Toolbar toolbar;
     private RecyclerView mRecyclerView;
     private RosterAdapter mAdapter;
-    private List<ItemFriend> mList = new ArrayList<>();
+    private List<GroupFriend> mList = new ArrayList<>();
     private Context mContext;
     private SmackPushService.SmackPushBinder pushBinder;
 
@@ -71,10 +71,28 @@ public class MainActivity extends AppCompatActivity implements SmackPushCallBack
                 switch (msg.what){
                     case XmppConnectionFlag.KEY_FRIENDS_SUCCESS:
                         Bundle bundle = msg.getData();
-                        List<ItemFriend> list = (List<ItemFriend>) bundle.getSerializable(XmppConnectionFlag.KEY_FRIENDS_SUCCESS_PARAMS);
-                        mList.clear();
-                        mList.addAll(list);
-                        mAdapter.notifyDataSetChanged();
+                        mList = (List<GroupFriend>) bundle.getSerializable(XmppConnectionFlag.KEY_FRIENDS_SUCCESS_PARAMS);
+                        mAdapter = new RosterAdapter(mContext,mList);
+                        mAdapter.setOnItemOnClickListener(new RosterAdapter.OnItemOnClickListener() {
+                            @Override
+                            public void onClick(GroupFriend.ItemFriend friend) {
+                                XmppConnectionManager.newInstance().sendMessageSin(new Handler(){
+                                    @Override
+                                    public void handleMessage(Message msg) {
+                                        super.handleMessage(msg);
+                                        switch (msg.what){
+                                            case XmppConnectionFlag.KEY_SENDMESSAGESIN_SUCCESS:
+                                                Toast.makeText(mContext,"sendMessageSin",Toast.LENGTH_LONG).show();
+                                                break;
+                                            default:
+                                                break;
+                                        }
+                                    }
+                                },friend.getUser());
+                            }
+                        });
+
+                        mRecyclerView.setAdapter(mAdapter);
                         break;
                     default:
                         break;
@@ -101,28 +119,6 @@ public class MainActivity extends AppCompatActivity implements SmackPushCallBack
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.addItemDecoration(new DividerItemDecoration(mContext,LinearLayoutManager.VERTICAL));
-        mAdapter = new RosterAdapter(this,mList);
-        mAdapter.setOnItemOnClickListener(new RosterAdapter.OnItemOnClickListener() {
-            @Override
-            public void onClick(ItemFriend friend) {
-                XmppConnectionManager.newInstance().sendMessageSin(new Handler(){
-                    @Override
-                    public void handleMessage(Message msg) {
-                        super.handleMessage(msg);
-                        switch (msg.what){
-                            case XmppConnectionFlag.KEY_SENDMESSAGESIN_SUCCESS:
-                                Toast.makeText(mContext,"sendMessageSin",Toast.LENGTH_LONG).show();
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                },friend.getUser());
-            }
-        });
-
-        mRecyclerView.setAdapter(mAdapter);
-        mRecyclerView.scrollToPosition(mAdapter.getItemCount()-1);
     }
 
     @Override

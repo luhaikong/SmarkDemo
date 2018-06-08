@@ -1,8 +1,7 @@
 package com.smack.xmpp;
 
-import com.smack.xmppentity.ItemFriend;
+import com.smack.xmppentity.GroupFriend;
 
-import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.roster.RosterGroup;
@@ -19,7 +18,7 @@ import java.util.Set;
 
 public class XmppRosterManager {
 
-    private List<ItemFriend> rosterList;
+    private List<GroupFriend> rosterList;
 
     private static class Holder {
         private static XmppRosterManager singleton = new XmppRosterManager();
@@ -39,41 +38,40 @@ public class XmppRosterManager {
         return roster.getUnfiledEntries();
     }
 
-    public List<ItemFriend> getFriendList(XMPPTCPConnection connection, String jid){
+    public List<GroupFriend> getFriendList(XMPPTCPConnection connection, String jid){
         Set<RosterEntry> set = getUnfiledEntries(connection);
         rosterList = new ArrayList<>();
-        ItemFriend itemFriend = new ItemFriend();
-        itemFriend.setName("我的好友");
-        itemFriend.setGroup(true);
-        rosterList.add(itemFriend);
+        GroupFriend groupFriend = new GroupFriend();
+        groupFriend.setName("我的好友");
+        List<GroupFriend.ItemFriend> list = new ArrayList<>();
         if (set!=null&&set.size()>0){
             for (RosterEntry entry:set){
-                ItemFriend friend = new ItemFriend();
+                GroupFriend.ItemFriend friend = new GroupFriend.ItemFriend();
                 friend.setName(entry.getName());
                 friend.setUser(entry.getUser());
-                rosterList.add(friend);
+                list.add(friend);
             }
         }
+        groupFriend.setItemFriends(list);
+        rosterList.add(groupFriend);
 
         Collection<RosterGroup> collection = getRosterGroupList(connection);
         if (collection!=null&&collection.size()>0){
             for (RosterGroup group : collection) {
-                ItemFriend gFriend = new ItemFriend();
+                GroupFriend gFriend = new GroupFriend();
                 gFriend.setName(group.getName());
-                gFriend.setGroup(true);
-                rosterList.add(gFriend);
+                List<GroupFriend.ItemFriend> listTemp = new ArrayList<>();
                 List<RosterEntry> entries = group.getEntries();
                 for (RosterEntry entry : entries) {
-                    ItemFriend friend = new ItemFriend();
+                    GroupFriend.ItemFriend friend = new GroupFriend.ItemFriend();
                     friend.setUser(entry.getUser());
                     friend.setName(entry.getName());
-                    rosterList.add(friend);
+                    listTemp.add(friend);
                 }
+                gFriend.setItemFriends(listTemp);
+                rosterList.add(gFriend);
             }
         }
-
-        Roster roster = Roster.getInstanceFor(connection);
-        List<Presence> listAll = roster.getAllPresences(jid);
 
         return rosterList;
     }

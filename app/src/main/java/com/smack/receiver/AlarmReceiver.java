@@ -28,7 +28,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         ConnectivityManager connectivityManager =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo info = connectivityManager.getActiveNetworkInfo();
-        if ( info != null && info.isAvailable()){
+        if (info != null && info.isAvailable()){
             switch (intent.getAction()){
                 case Intent.ACTION_USER_PRESENT:
                 case Intent.ACTION_PACKAGE_ADDED:

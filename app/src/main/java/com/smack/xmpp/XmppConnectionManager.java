@@ -10,7 +10,7 @@ import android.util.Log;
 
 import com.smack.receiver.IntentReceiver;
 import com.smack.service.SmackPushCallBack;
-import com.smack.xmppentity.ItemFriend;
+import com.smack.xmppentity.GroupFriend;
 
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackException;
@@ -385,7 +385,7 @@ public class XmppConnectionManager {
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                List<ItemFriend> list = XmppRosterManager.newInstance().getFriendList(connection,connection.getUser());
+                List<GroupFriend> list = XmppRosterManager.newInstance().getFriendList(connection,connection.getUser());
                 if (handler!=null){
                     Message message = new Message();
                     message.what = XmppConnectionFlag.KEY_FRIENDS_SUCCESS;
