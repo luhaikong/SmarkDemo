@@ -27,10 +27,12 @@ public class SmackApplication extends Application {
 
     private void initXmppUserConfig(){
         Map<String,String> attr = new HashMap<>(2);
-        attr.put(XmppUserConfig.TAG,"iOS开发者");
-        attr.put(XmppUserConfig.ALIAS,"小明");
+//        attr.put(XmppUserConfig.TAG,"Android开发");
+//        attr.put(XmppUserConfig.ALIAS,"吴政通");
+        attr.put("name","android开发者-吴政通");
+        attr.put("email","1031359299@qq.com");
         XmppUserConfig config = new XmppUserConfig.Builder()
-                .setOfUserName("luojiaming")
+                .setOfUserName("wuzhengtong")
                 .setOfPassword("123456")
                 .setAttr(attr)
                 .create();

@@ -10,8 +10,8 @@ import java.util.Map;
 
 public class XmppUserConfig {
 
-    public final static String TAG = "Tag";
-    public final static String ALIAS = "Alias";
+    public final static String TAG = "tag";
+    public final static String ALIAS = "alias";
 
     private String ofUserName;//用户名
     private String ofPassword;//密码

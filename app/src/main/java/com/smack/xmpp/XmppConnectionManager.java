@@ -232,7 +232,7 @@ public class XmppConnectionManager {
                     if (ofXmppUserConfig.getAttr() == null) {
                         manager.createAccount(ofXmppUserConfig.getOfUserName(), ofXmppUserConfig.getOfPassword());
                     } else {
-                        manager.createAccount(ofXmppUserConfig.getOfUserName(), ofXmppUserConfig.getOfPassword());
+                        manager.createAccount(ofXmppUserConfig.getOfUserName(), ofXmppUserConfig.getOfPassword(),ofXmppUserConfig.getAttr());
                     }
                     login();
                     if (smackPushCallBack!=null){
