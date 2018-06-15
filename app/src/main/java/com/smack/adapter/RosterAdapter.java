@@ -18,7 +18,7 @@ import java.util.List;
  * Created by MyPC on 2018/5/30.
  */
 
-public class RosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements View.OnClickListener{
+public class RosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int VH_GROUP = 100;
     private static final int VH_ITEM = 200;
@@ -26,25 +26,8 @@ public class RosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private Context cxt;
     private List<GroupFriend> rosterEntries;
     private List<Object> items;
-    private int index;
 
     private OnItemOnClickListener onItemOnClickListener;
-
-    @Override
-    public void onClick(View v) {
-        GroupFriend g = (GroupFriend) items.get(index);
-        boolean isExp = g.isExpan();
-        g.setExpan(!isExp);
-        items.set(index,g);
-        if (g.isExpan()){
-            for (GroupFriend.ItemFriend item:g.getItemFriends()){
-                items.add(item);
-            }
-        } else {
-            items.removeAll(g.getItemFriends());
-        }
-        notifyDataSetChanged();
-    }
 
     public interface OnItemOnClickListener{
 //        void onClick(GroupFriend group);
@@ -52,6 +35,9 @@ public class RosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         void onClick(GroupFriend.ItemFriend friend);
     }
 
+    /**
+     * @param onItemOnClickListener
+     */
     public void setOnItemOnClickListener(OnItemOnClickListener onItemOnClickListener) {
         this.onItemOnClickListener = onItemOnClickListener;
     }
@@ -92,13 +78,32 @@ public class RosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
         if (holder instanceof VHGroup){
             VHGroup vHGroup = (VHGroup) holder;
             GroupFriend g = (GroupFriend) items.get(position);
             vHGroup.tv_content.setText(g.getName());
-            index = position;
-            vHGroup.itemView.setOnClickListener(this);
+            vHGroup.tv_count_online.setText("0/".concat(String.valueOf(g.getItemFriends().size())));
+            if (g.isExpan()){
+                vHGroup.iv_expand.setBackgroundResource(R.drawable.ic_expand_more_black_24dp);
+            } else {
+                vHGroup.iv_expand.setBackgroundResource(R.drawable.ic_chevron_right_black_24dp);
+            }
+            vHGroup.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (items.get(position) instanceof GroupFriend){
+                        GroupFriend g = (GroupFriend)items.get(position);
+                        for (int i=0;i<rosterEntries.size();i++){
+                            if (rosterEntries.get(i).getName().equals(g.getName())){
+                                rosterEntries.get(i).setExpan(!g.isExpan());
+                            }
+                        }
+                        items = build(rosterEntries);
+                        notifyDataSetChanged();
+                    }
+                }
+            });
         } else if (holder instanceof VHItem){
             VHItem vHItem = (VHItem) holder;
             final GroupFriend.ItemFriend item = (GroupFriend.ItemFriend) items.get(position);
