@@ -83,7 +83,7 @@ public class RosterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             VHGroup vHGroup = (VHGroup) holder;
             GroupFriend g = (GroupFriend) items.get(position);
             vHGroup.tv_content.setText(g.getName());
-            vHGroup.tv_count_online.setText("0/".concat(String.valueOf(g.getItemFriends().size())));
+            vHGroup.tv_count_online.setText(String.valueOf(g.getCount_online()).concat("/").concat(String.valueOf(g.getItemFriends().size())));
             if (g.isExpan()){
                 vHGroup.iv_expand.setBackgroundResource(R.drawable.ic_expand_more_black_24dp);
             } else {

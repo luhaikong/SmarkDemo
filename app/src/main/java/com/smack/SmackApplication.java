@@ -32,7 +32,7 @@ public class SmackApplication extends Application {
         attr.put("name","android开发者-吴政通");
         attr.put("email","1031359299@qq.com");
         XmppUserConfig config = new XmppUserConfig.Builder()
-                .setOfUserName("wuzhengtong")
+                .setOfUserName("test")
                 .setOfPassword("123456")
                 .setAttr(attr)
                 .create();
