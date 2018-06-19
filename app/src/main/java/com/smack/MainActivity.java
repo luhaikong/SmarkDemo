@@ -76,19 +76,7 @@ public class MainActivity extends AppCompatActivity implements SmackPushCallBack
                         mAdapter.setOnItemOnClickListener(new RosterAdapter.OnItemOnClickListener() {
                             @Override
                             public void onClick(GroupFriend.ItemFriend friend) {
-                                XmppConnectionManager.newInstance().sendMessageSin(new Handler(){
-                                    @Override
-                                    public void handleMessage(Message msg) {
-                                        super.handleMessage(msg);
-                                        switch (msg.what){
-                                            case XmppConnectionFlag.KEY_SENDMESSAGESIN_SUCCESS:
-                                                Toast.makeText(mContext,"sendMessageSin",Toast.LENGTH_LONG).show();
-                                                break;
-                                            default:
-                                                break;
-                                        }
-                                    }
-                                },friend.getUser());
+                                showChatActivity(friend);
                             }
                         });
 
@@ -160,5 +148,11 @@ public class MainActivity extends AppCompatActivity implements SmackPushCallBack
     @Override
     public void onServiceDisconnected(ComponentName name) {
 
+    }
+
+    private void showChatActivity(GroupFriend.ItemFriend friend){
+        Intent intent = new Intent(mContext,ChatActivity.class);
+        intent.putExtra(GroupFriend.ItemFriend.OBJ,friend);
+        startActivity(intent);
     }
 }

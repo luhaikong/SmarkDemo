@@ -100,16 +100,25 @@ public class XmppMsgManager {
      * @param connection
      * @param jid  好友jid
      */
-    public void sendMessage(XMPPTCPConnection connection,String jid){
+    public void sendMessage(XMPPTCPConnection connection,String jid,OutGoMsgListener listener,String content){
         try {
+            if (listener!=null){
+                listener.onOutGoing();
+            }
             ChatManager chatManager =  ChatManager.getInstanceFor(connection);
             Chat chat = chatManager.createChat(jid);
             Message newMessage = new Message();
-            newMessage.setBody("Howdy!");
+            newMessage.setBody(content);
             JivePropertiesManager.addProperty(newMessage, "favoriteColor", "red");
             chat.sendMessage(newMessage);
+            if (listener!=null){
+                listener.onOutGoSuccess(content);
+            }
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
+            if (listener!=null){
+                listener.onOutGoFail(e.getMessage());
+            }
         }
     }
 

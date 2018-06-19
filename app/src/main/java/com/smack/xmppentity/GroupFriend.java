@@ -53,6 +53,8 @@ public class GroupFriend implements Serializable {
 //        Presence:
 //        <presence from='test@rocketmq-03/Smack' id='wz8mj-16' type='unavailable'></presence>
 
+        public final static String OBJ = "RosterEntry";
+
         private String name;
         private String status;
         private String user;

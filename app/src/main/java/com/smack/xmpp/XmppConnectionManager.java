@@ -19,7 +19,6 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
-import org.jivesoftware.smack.roster.RosterGroup;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
@@ -28,7 +27,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -85,7 +83,7 @@ public class XmppConnectionManager {
      * 更改用户状态
      */
     public void setPresence(int code) {
-        if (connection == null) {
+        if (getConnectionAndInit() == null) {
             return;
         }
         Presence presence;
@@ -201,6 +199,9 @@ public class XmppConnectionManager {
      * @code false 修改失败
      */
     public void changePassword(final String newPassword, final Handler handler) {
+        if (getConnectionAndInit() == null) {
+            return;
+        }
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -223,6 +224,9 @@ public class XmppConnectionManager {
      * @see AccountManager
      */
     public void registerAccount(final SmackPushCallBack smackPushCallBack) {
+        if (getConnectionAndInit() == null) {
+            return;
+        }
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -259,6 +263,9 @@ public class XmppConnectionManager {
      * @see AccountManager
      */
     private void registerAccount(){
+        if (getConnectionAndInit() == null) {
+            return;
+        }
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -360,6 +367,9 @@ public class XmppConnectionManager {
     }
 
     public void addChatListener(final SmackPushCallBack smackPushCallBack){
+        if (getConnectionAndInit() == null) {
+            return;
+        }
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -368,20 +378,29 @@ public class XmppConnectionManager {
         });
     }
 
-    public void sendMessageSin(final Handler handler, final String toJid){
+    public void sendMessageSin(final OutGoMsgListener listener, final String toJid, final String content){
+        if (getConnectionAndInit() == null) {
+            return;
+        }
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                XmppMsgManager.newInstance().sendMessage(connection,toJid);
+                XmppMsgManager.newInstance().sendMessage(connection,toJid,listener,content);
             }
         });
     }
 
     public void sendMessageMuc(){
+        if (getConnectionAndInit() == null) {
+            return;
+        }
 
     }
 
     public void getFriendList(final Handler handler){
+        if (getConnectionAndInit() == null) {
+            return;
+        }
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -398,37 +417,36 @@ public class XmppConnectionManager {
         });
     }
 
-    public void getRosterGroupList(final Handler handler){
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                Collection<RosterGroup> list = XmppRosterManager.newInstance().getRosterGroupList(connection);
-                if (handler!=null){
-                    Message message = new Message();
-                    message.what = XmppConnectionFlag.KEY_ROSTERGROUP_SUCCESS;
-                    handler.sendMessage(message);
-                }
-            }
-        });
-    }
-
-    public void getUnfiledEntries(final Handler handler){
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                Set<RosterEntry> list = XmppRosterManager.newInstance().getUnfiledEntries(connection);
-                if (handler!=null){
-                    Message message = new Message();
-                    message.what = XmppConnectionFlag.KEY_ROSTERENTRY_SUCCESS;
-                    handler.sendMessage(message);
-                }
-            }
-        });
-    }
-
     public XMPPTCPConnection getConnection() {
         if (connection==null){
             throw new RuntimeException("Xmpp连接还未初始化！！！");
+        }
+        return connection;
+    }
+
+    public XMPPTCPConnection getConnectionAndInit() {
+        if (connection==null){
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (connection == null) {
+                            connection = new XMPPTCPConnection(getConfiguration());
+                            connection.addConnectionListener(onImConnectionListener);
+                            connection.connect();
+                        } else {
+                            if (!connection.isAuthenticated()){
+                                login();
+                            } else {
+                                registerAccount(smackPushCallBack);
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        connection = null;
+                    }
+                }
+            });
         }
         return connection;
     }
