@@ -3,11 +3,11 @@ package com.smack;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,25 +16,39 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.smack.adapter.RosterAdapter;
-import com.smack.service.SmackPushCallBack;
 import com.smack.service.SmackPushService;
 import com.smack.xmpp.XmppConnectionFlag;
 import com.smack.xmpp.XmppConnectionManager;
-import com.smack.xmpp.XmppUserConfig;
 import com.smack.xmppentity.GroupFriend;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements SmackPushCallBack {
+/**
+ * @author MyPC
+ */
+public class MainActivity extends SmackPushActivity {
 
     private Toolbar toolbar;
     private RecyclerView mRecyclerView;
     private RosterAdapter mAdapter;
     private List<GroupFriend> mList = new ArrayList<>();
     private Context mContext;
-    private SmackPushService.SmackPushBinder pushBinder;
 
+    private SmackPushService.SmackPushBinder pushBinder;
+    private ServiceConnection pushConn = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            pushBinder = (SmackPushService.SmackPushBinder) service;
+            SmackPushService pushService = pushBinder.getService();
+            pushService.addChatListener(MainActivity.this);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
     private Handler handler = new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -87,19 +101,35 @@ public class MainActivity extends AppCompatActivity implements SmackPushCallBack
                 }
             }
         });
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
         bindSmackPushService();
     }
 
     @Override
+    protected void onPause() {
+        if (pushConn!=null&&pushBinder!=null){
+            unbindService(pushConn);
+            pushBinder = null;
+        }
+        super.onPause();
+    }
+
+    @Override
     protected void onDestroy() {
-        unbindService(this);
+        if (pushConn!=null&&pushBinder!=null){
+            unbindService(pushConn);
+            pushBinder = null;
+        }
         super.onDestroy();
     }
 
     private void bindSmackPushService(){
-        Intent intent = new Intent(mContext, SmackPushService.class);
-        bindService(intent,this,BIND_AUTO_CREATE);
+        Intent intent = new Intent(this, SmackPushService.class);
+        bindService(intent,pushConn,BIND_AUTO_CREATE);
     }
 
     private void initRecyclerView(){
@@ -107,20 +137,12 @@ public class MainActivity extends AppCompatActivity implements SmackPushCallBack
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.addItemDecoration(new DividerItemDecoration(mContext,LinearLayoutManager.VERTICAL));
+        mAdapter = new RosterAdapter(mContext,mList);
+        mRecyclerView.setAdapter(mAdapter);
     }
 
     @Override
     public void connected() {
-
-    }
-
-    @Override
-    public void registerAccount(boolean success, String msg) {
-
-    }
-
-    @Override
-    public void authenticated() {
 
     }
 
@@ -131,23 +153,6 @@ public class MainActivity extends AppCompatActivity implements SmackPushCallBack
         bundle.putString("body",content);
         message.setData(bundle);
         handler.sendMessage(message);
-    }
-
-    @Override
-    public void logout(XmppUserConfig config) {
-
-    }
-
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        pushBinder = (SmackPushService.SmackPushBinder) service;
-        SmackPushService pushService = pushBinder.getService();
-        pushService.addChatListener(this);
-    }
-
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-
     }
 
     private void showChatActivity(GroupFriend.ItemFriend friend){

@@ -3,32 +3,43 @@ package com.smack;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.smack.service.SmackPushCallBack;
 import com.smack.service.SmackPushService;
 import com.smack.xmpp.XmppUserConfig;
 
 /**
  * @author MyPC
  */
-public class LoginActivity extends AppCompatActivity implements View.OnClickListener
-        , SmackPushCallBack {
+public class LoginActivity extends SmackPushActivity implements View.OnClickListener {
 
     private EditText et_userAccount;
     private EditText et_userPassword;
     private Button btn_login,btn_register,btn_loginOut;
     private Context mContext;
-    private SmackPushService.SmackPushBinder pushBinder;
 
+    private SmackPushService.SmackPushBinder pushBinder;
+    private ServiceConnection pushConn = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            pushBinder = (SmackPushService.SmackPushBinder) service;
+            SmackPushService pushService = pushBinder.getService();
+            pushService.initConnectionAndLogin(LoginActivity.this);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
     private Handler handler = new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -53,26 +64,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         btn_register.setOnClickListener(this);
     }
 
-    @Override
-    protected void onDestroy() {
-        unbindService(this);
-        super.onDestroy();
-    }
-
     private void showMainActivity(){
         Intent intent = new Intent(mContext,MainActivity.class);
         startActivity(intent);
         finish();
-    }
-
-    private void bindSmackPushService(){
-        Intent intent = new Intent(mContext, SmackPushService.class);
-        bindService(intent,this,BIND_AUTO_CREATE);
-    }
-
-    private void stopSmackPushService(){
-        Intent intent = new Intent(mContext, SmackPushService.class);
-        stopService(intent);
     }
 
     @Override
@@ -95,27 +90,33 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    /**
-     * 绑定服务的时候调用
-     * @param name
-     * @param service
-     */
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        pushBinder = (SmackPushService.SmackPushBinder) service;
-        SmackPushService pushService = pushBinder.getService();
-        pushService.initConnectionAndLogin(this);
+    private void bindSmackPushService(){
+        Intent intent = new Intent(this, SmackPushService.class);
+        bindService(intent,pushConn,BIND_AUTO_CREATE);
     }
 
-    /**
-     * 服务解除绑定时候调用
-     * @param name
-     */
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-
+    private void stopSmackPushService(){
+        Intent intent = new Intent(this, SmackPushService.class);
+        stopService(intent);
     }
 
+    @Override
+    protected void onPause() {
+        if (pushConn!=null&&pushBinder!=null){
+            unbindService(pushConn);
+            pushBinder = null;
+        }
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (pushConn!=null&&pushBinder!=null){
+            unbindService(pushConn);
+            pushBinder = null;
+        }
+        super.onDestroy();
+    }
 
     @Override
     public void connected() {
@@ -124,7 +125,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public void registerAccount(boolean success, String msg) {
-
+        Log.d("LoginActivity","-------------registerAccount------------");
     }
 
     @Override
@@ -144,6 +145,5 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     public void logout(XmppUserConfig config) {
         Log.d("LoginActivity","----------------logout---------------");
     }
-
 
 }

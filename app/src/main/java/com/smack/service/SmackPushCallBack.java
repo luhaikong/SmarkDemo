@@ -1,7 +1,5 @@
 package com.smack.service;
 
-import android.content.ServiceConnection;
-
 import com.smack.xmpp.XmppUserConfig;
 
 /**
@@ -10,7 +8,8 @@ import com.smack.xmpp.XmppUserConfig;
  * @date 2018/6/5
  */
 
-public interface SmackPushCallBack extends ServiceConnection {
+public interface SmackPushCallBack {
+
     public void connected();
 
     public void registerAccount(boolean success,String msg);
