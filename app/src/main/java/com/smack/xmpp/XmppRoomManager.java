@@ -2,6 +2,8 @@ package com.smack.xmpp;
 
 import android.text.TextUtils;
 
+import com.smack.xmppentity.RoomHosted;
+
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.SmackException;
@@ -24,18 +26,40 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Created by MyPC on 2018/5/25.
+ *
+ * @author MyPC
+ * @date 2018/5/25
  */
 
 public class XmppRoomManager {
 
+    private List<RoomHosted> roomHosteds;
+
+    private static class Holder {
+        private static XmppRoomManager singleton = new XmppRoomManager();
+    }
+
+    public static XmppRoomManager newInstance(){
+        return XmppRoomManager.Holder.singleton;
+    }
+
     /**
      * 获取服务器上的所有群组
      */
-    private List<HostedRoom> getHostedRoom(XMPPTCPConnection connection) {
+    public List<RoomHosted> getHostedRooms(XMPPTCPConnection connection) {
         MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
         try {
-            return manager.getHostedRooms(connection.getServiceName());
+            List<HostedRoom> list = manager.getHostedRooms(connection.getServiceName());
+            if (list!=null&&list.size()>0){
+                roomHosteds = new ArrayList<>();
+                for (HostedRoom room:list){
+                    RoomHosted hosted = new RoomHosted();
+                    hosted.setJid(room.getJid());
+                    hosted.setName(room.getName());
+                    roomHosteds.add(hosted);
+                }
+            }
+            return roomHosteds;
         } catch (Exception e) {
             e.printStackTrace();
         }

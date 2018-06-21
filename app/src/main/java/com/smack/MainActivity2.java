@@ -90,27 +90,20 @@ public class MainActivity2 extends BaseSmackPushActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
         mBundle = savedInstanceState;
+        mContext = this;
         toolbar = (Toolbar) findViewById(R.id.toolbar);
 
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-
-        int[][] states = new int[][]{
-                new int[]{-android.R.attr.state_checked},
-                new int[]{android.R.attr.state_checked}
-        };
-        int[] colors = new int[]{getResources().getColor(android.R.color.tab_indicator_text),
-                getResources().getColor(R.color.colorAccent)
-        };
-        ColorStateList csl = new ColorStateList(states, colors);
-        navigation.setItemTextColor(csl);
-        navigation.setItemIconTintList(csl);
+        initBottomNavigation();
         initFragment(savedInstanceState,"消息");
     }
 
     @Override
     public void setTitle(CharSequence title) {
         toolbar.setTitle(title);
+    }
+
+    public void setMenu(){
+
     }
 
     @Override
@@ -140,6 +133,22 @@ public class MainActivity2 extends BaseSmackPushActivity {
     private void bindSmackPushService(){
         Intent intent = new Intent(this, SmackPushService.class);
         bindService(intent,pushConn,BIND_AUTO_CREATE);
+    }
+
+    private void initBottomNavigation(){
+        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
+        int[][] states = new int[][]{
+                new int[]{-android.R.attr.state_checked},
+                new int[]{android.R.attr.state_checked}
+        };
+        int[] colors = new int[]{getResources().getColor(android.R.color.tab_indicator_text),
+                getResources().getColor(R.color.colorAccent)
+        };
+        ColorStateList csl = new ColorStateList(states, colors);
+        navigation.setItemTextColor(csl);
+        navigation.setItemIconTintList(csl);
     }
 
     private void initFragment(Bundle savedInstanceState,String title){
