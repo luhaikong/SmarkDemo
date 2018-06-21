@@ -43,6 +43,13 @@ public class XmppMsgManager {
         return XmppMsgManager.Holder.singleton;
     }
 
+
+    private SmackPushCallBack smackPushCallBack;
+
+    public void setSmackPushCallBack(SmackPushCallBack smackPushCallBack) {
+        this.smackPushCallBack = smackPushCallBack;
+    }
+
     /**
      * 一上线获取离线消息(注：登录成功后调用)
      * 设置登录状态为在线
@@ -66,7 +73,7 @@ public class XmppMsgManager {
     /**
      * 初始化聊天消息监听
      */
-    public void initListener(final XMPPTCPConnection connection, final SmackPushCallBack smackPushCallBack, final Context context) {
+    public void initListener(final XMPPTCPConnection connection, final Context context) {
         ChatManager chatManager = ChatManager.getInstanceFor(connection);
         if (chatManager.getChatListeners()!=null){
             Set<ChatManagerListener> set = chatManager.getChatListeners();

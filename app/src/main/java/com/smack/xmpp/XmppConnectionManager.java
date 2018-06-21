@@ -158,7 +158,7 @@ public class XmppConnectionManager {
                         connection.login(ofXmppUserConfig.getOfUserName(), ofXmppUserConfig.getOfPassword());
                         // TODO 获取离线消息
                     } else {
-                        smackPushCallBack.authenticated();
+                        smackPushCallBack.authenticated(connection,true);
                     }
                 } catch (XMPPException | SmackException | IOException e) {
                     e.printStackTrace();
@@ -366,14 +366,15 @@ public class XmppConnectionManager {
         });
     }
 
-    public void addChatListener(final SmackPushCallBack smackPushCallBack){
+    public void addChatListener(SmackPushCallBack smackPushCallBack){
         if (getConnectionAndInit() == null) {
             return;
         }
+        XmppMsgManager.newInstance().setSmackPushCallBack(smackPushCallBack);
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                XmppMsgManager.newInstance().initListener(connection,smackPushCallBack,ofContext);
+                XmppMsgManager.newInstance().initListener(connection,ofContext);
             }
         });
     }
@@ -477,7 +478,7 @@ public class XmppConnectionManager {
         public void connected(XMPPConnection connection) {
             super.connected(connection);
             if (smackPushCallBack!=null){
-                smackPushCallBack.connected();
+                smackPushCallBack.connected(connection);
             }
             if (imContext!=null){
                 Intent intent = new Intent(IntentReceiver.IntentEnum.CONNECTION);
@@ -489,7 +490,7 @@ public class XmppConnectionManager {
         public void authenticated(XMPPConnection connection, boolean resumed) {
             super.authenticated(connection, resumed);
             if (smackPushCallBack!=null){
-                smackPushCallBack.authenticated();
+                smackPushCallBack.authenticated(connection,resumed);
             }
             if (imContext!=null){
                 Intent intent = new Intent(IntentReceiver.IntentEnum.AUTHENTICATED);
@@ -520,7 +521,8 @@ public class XmppConnectionManager {
          */
         @Override
         public void authenticated(XMPPConnection connection, boolean resumed) {
-            XmppMsgManager.newInstance().initListener((XMPPTCPConnection) connection,smackPushCallBack,ofContext);
+            XmppMsgManager.newInstance().setSmackPushCallBack(smackPushCallBack);
+            XmppMsgManager.newInstance().initListener((XMPPTCPConnection) connection,ofContext);
         }
 
         /**

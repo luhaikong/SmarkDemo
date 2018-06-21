@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -27,9 +28,10 @@ import java.util.List;
 /**
  * @author MyPC
  */
-public class MainActivity extends SmackPushActivity {
+public class MainActivity extends BaseSmackPushActivity {
 
     private Toolbar toolbar;
+    private SwipeRefreshLayout refreshLayout;
     private RecyclerView mRecyclerView;
     private RosterAdapter mAdapter;
     private List<GroupFriend> mList = new ArrayList<>();
@@ -75,32 +77,11 @@ public class MainActivity extends SmackPushActivity {
             }
         });
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        refreshLayout = (SwipeRefreshLayout) findViewById(R.id.refreshLayout);
 
         initRecyclerView();
 
-        XmppConnectionManager.newInstance().getFriendList(new Handler(){
-            @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-                switch (msg.what){
-                    case XmppConnectionFlag.KEY_FRIENDS_SUCCESS:
-                        Bundle bundle = msg.getData();
-                        mList = (List<GroupFriend>) bundle.getSerializable(XmppConnectionFlag.KEY_FRIENDS_SUCCESS_PARAMS);
-                        mAdapter = new RosterAdapter(mContext,mList);
-                        mAdapter.setOnItemOnClickListener(new RosterAdapter.OnItemOnClickListener() {
-                            @Override
-                            public void onClick(GroupFriend.ItemFriend friend) {
-                                showChatActivity(friend);
-                            }
-                        });
-
-                        mRecyclerView.setAdapter(mAdapter);
-                        break;
-                    default:
-                        break;
-                }
-            }
-        });
+        requestData(true);
     }
 
     @Override
@@ -127,6 +108,36 @@ public class MainActivity extends SmackPushActivity {
         super.onDestroy();
     }
 
+    private void requestData(boolean isFresh){
+        XmppConnectionManager.newInstance().getFriendList(new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                switch (msg.what){
+                    case XmppConnectionFlag.KEY_FRIENDS_SUCCESS:
+                        if (refreshLayout.isRefreshing()){
+                            refreshLayout.setRefreshing(false);
+                        }
+
+                        Bundle bundle = msg.getData();
+                        mList = (List<GroupFriend>) bundle.getSerializable(XmppConnectionFlag.KEY_FRIENDS_SUCCESS_PARAMS);
+                        mAdapter = new RosterAdapter(mContext,mList);
+                        mAdapter.setOnItemOnClickListener(new RosterAdapter.OnItemOnClickListener() {
+                            @Override
+                            public void onClick(GroupFriend.ItemFriend friend) {
+                                showChatActivity(friend);
+                            }
+                        });
+
+                        mRecyclerView.setAdapter(mAdapter);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+    }
+
     private void bindSmackPushService(){
         Intent intent = new Intent(this, SmackPushService.class);
         bindService(intent,pushConn,BIND_AUTO_CREATE);
@@ -139,11 +150,19 @@ public class MainActivity extends SmackPushActivity {
         mRecyclerView.addItemDecoration(new DividerItemDecoration(mContext,LinearLayoutManager.VERTICAL));
         mAdapter = new RosterAdapter(mContext,mList);
         mRecyclerView.setAdapter(mAdapter);
+
+        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                requestData(true);
+            }
+        });
     }
 
-    @Override
-    public void connected() {
-
+    private void showChatActivity(GroupFriend.ItemFriend friend){
+        Intent intent = new Intent(mContext,ChatActivity.class);
+        intent.putExtra(GroupFriend.ItemFriend.OBJ,friend);
+        startActivity(intent);
     }
 
     @Override
@@ -155,9 +174,8 @@ public class MainActivity extends SmackPushActivity {
         handler.sendMessage(message);
     }
 
-    private void showChatActivity(GroupFriend.ItemFriend friend){
-        Intent intent = new Intent(mContext,ChatActivity.class);
-        intent.putExtra(GroupFriend.ItemFriend.OBJ,friend);
-        startActivity(intent);
+    @Override
+    public void connectionClosedOnError(Exception e) {
+
     }
 }

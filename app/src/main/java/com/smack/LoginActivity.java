@@ -14,12 +14,19 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.smack.service.SmackPushService;
+import com.smack.sp.SharePreferenceMgr;
+import com.smack.xmpp.XmppConnectionManager;
 import com.smack.xmpp.XmppUserConfig;
+
+import org.jivesoftware.smack.XMPPConnection;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author MyPC
  */
-public class LoginActivity extends SmackPushActivity implements View.OnClickListener {
+public class LoginActivity extends BaseSmackPushActivity implements View.OnClickListener {
 
     private EditText et_userAccount;
     private EditText et_userPassword;
@@ -62,6 +69,17 @@ public class LoginActivity extends SmackPushActivity implements View.OnClickList
         btn_loginOut.setOnClickListener(this);
         btn_register = (Button) findViewById(R.id.btn_register);
         btn_register.setOnClickListener(this);
+
+        initUser();
+    }
+
+    private void initUser() {
+        String username = (String) SharePreferenceMgr.get(this,SharePreferenceMgr.KEY_OFUSERNAME,"");
+        String pw = (String) SharePreferenceMgr.get(this,SharePreferenceMgr.KEY_OFPASSWORD,"");
+        if (username!=null&&pw!=null&&!username.isEmpty()&&!pw.isEmpty()){
+            et_userAccount.setText(username);
+            et_userPassword.setText(pw);
+        }
     }
 
     private void showMainActivity(){
@@ -74,8 +92,15 @@ public class LoginActivity extends SmackPushActivity implements View.OnClickList
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.btn_login:
-                et_userAccount.setText("test");
-                et_userPassword.setText("123456");
+                if (et_userAccount.getText().toString().isEmpty()){
+                    showToast("请填写用户名！");
+                    return;
+                }
+                if(et_userPassword.getText().toString().isEmpty()){
+                    showToast("请填写密码！");
+                    return;
+                }
+                initXmppUserConfig(et_userAccount.getText().toString(),et_userPassword.getText().toString());
 
                 bindSmackPushService();
                 break;
@@ -88,6 +113,18 @@ public class LoginActivity extends SmackPushActivity implements View.OnClickList
             default:
                 break;
         }
+    }
+
+    private void initXmppUserConfig(String username,String pwd){
+        Map<String,String> attr = new HashMap<>(2);
+        attr.put("name","游客");
+        attr.put("email","1031359299@qq.com");
+        XmppUserConfig config = new XmppUserConfig.Builder()
+                .setOfUserName(username)
+                .setOfPassword(pwd)
+                .setAttr(attr)
+                .create();
+        XmppConnectionManager.newInstance().setOfXmppUserConfig(config);
     }
 
     private void bindSmackPushService(){
@@ -119,7 +156,8 @@ public class LoginActivity extends SmackPushActivity implements View.OnClickList
     }
 
     @Override
-    public void connected() {
+    public void connected(XMPPConnection connection) {
+        super.connected(connection);
         Log.d("LoginActivity","----------------connected---------------");
     }
 
@@ -129,8 +167,13 @@ public class LoginActivity extends SmackPushActivity implements View.OnClickList
     }
 
     @Override
-    public void authenticated() {
+    public void authenticated(XMPPConnection connection, boolean resumed) {
+        super.authenticated(connection, resumed);
         Log.d("LoginActivity","----------------authenticated---------------");
+        XmppUserConfig config = XmppConnectionManager.newInstance().getOfXmppUserConfig();
+        SharePreferenceMgr.put(mContext,SharePreferenceMgr.KEY_OFUSERNAME,config.getOfUserName());
+        SharePreferenceMgr.put(mContext,SharePreferenceMgr.KEY_OFPASSWORD,config.getOfPassword());
+
         SmackPushService pushService = pushBinder.getService();
         pushService.addChatListener(this);
         handler.sendEmptyMessage(0);
@@ -146,4 +189,8 @@ public class LoginActivity extends SmackPushActivity implements View.OnClickList
         Log.d("LoginActivity","----------------logout---------------");
     }
 
+    @Override
+    public void connectionClosedOnError(Exception e) {
+        Log.d("LoginActivity","----------------connectionClosedOnError---------------");
+    }
 }

@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * @author MyPC
  */
-public class ChatActivity extends SmackPushActivity implements View.OnClickListener, OutGoMsgListener {
+public class ChatActivity extends BaseSmackPushActivity implements View.OnClickListener, OutGoMsgListener {
 
     public final static String TAG = ChatActivity.class.getSimpleName();
     private Context mContext;
@@ -186,11 +186,6 @@ public class ChatActivity extends SmackPushActivity implements View.OnClickListe
     }
 
     @Override
-    public void connected() {
-
-    }
-
-    @Override
     public void chatCreated(String content, boolean createdLocally) {
         Message msg = new Message();
         msg.what = 1;
@@ -200,4 +195,8 @@ public class ChatActivity extends SmackPushActivity implements View.OnClickListe
         mHandler.sendMessage(msg);
     }
 
+    @Override
+    public void connectionClosedOnError(Exception e) {
+
+    }
 }

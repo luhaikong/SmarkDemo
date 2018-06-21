@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Intent;
 
 import com.smack.service.SmackPushService;
+import com.smack.sp.SharePreferenceMgr;
 import com.smack.xmpp.XmppConnectionManager;
 import com.smack.xmpp.XmppUserConfig;
 
@@ -26,21 +27,24 @@ public class SmackApplication extends Application {
     }
 
     private void initXmppUserConfig(){
-        Map<String,String> attr = new HashMap<>(2);
-//        attr.put(XmppUserConfig.TAG,"Android开发");
-//        attr.put(XmppUserConfig.ALIAS,"吴政通");
-        attr.put("name","android开发者-吴政通");
-        attr.put("email","1031359299@qq.com");
-        XmppUserConfig config = new XmppUserConfig.Builder()
-                .setOfUserName("test")
-                .setOfPassword("123456")
-                .setAttr(attr)
-                .create();
-        XmppConnectionManager.newInstance().setOfXmppUserConfig(config);
+        String username = (String) SharePreferenceMgr.get(this,SharePreferenceMgr.KEY_OFUSERNAME,"");
+        String pw = (String) SharePreferenceMgr.get(this,SharePreferenceMgr.KEY_OFPASSWORD,"");
+        if (username!=null&&pw!=null&&!username.isEmpty()&&!pw.isEmpty()){
+            Map<String,String> attr = new HashMap<>(2);
+            attr.put("name","游客");
+            attr.put("email","1031359299@qq.com");
+            XmppUserConfig config = new XmppUserConfig.Builder()
+                    .setOfUserName(username)
+                    .setOfPassword(pw)
+                    .setAttr(attr)
+                    .create();
+            XmppConnectionManager.newInstance().setOfXmppUserConfig(config);
+        }
     }
 
     private void initSmackPushService(){
         Intent intent = new Intent(getApplicationContext(), SmackPushService.class);
         startService(intent);
     }
+
 }
