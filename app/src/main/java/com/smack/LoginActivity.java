@@ -83,7 +83,7 @@ public class LoginActivity extends BaseSmackPushActivity implements View.OnClick
     }
 
     private void showMainActivity(){
-        Intent intent = new Intent(mContext,MainActivity.class);
+        Intent intent = new Intent(mContext,MainActivity2.class);
         startActivity(intent);
         finish();
     }

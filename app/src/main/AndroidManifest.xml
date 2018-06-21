@@ -32,7 +32,8 @@
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
         <activity android:name=".ChatActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
-
+        <activity android:name=".MainActivity2"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
         <service
             android:name=".service.BadgeIntentService"

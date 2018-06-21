@@ -14,7 +14,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Created by MyPC on 2018/5/30.
+ *
+ * @author MyPC
+ * @date 2018/5/30
  */
 
 public class XmppRosterManager {

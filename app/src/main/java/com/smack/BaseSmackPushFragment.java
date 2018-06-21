@@ -1,6 +1,6 @@
 package com.smack;
 
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.Fragment;
 import android.widget.Toast;
 
 import com.smack.service.SmackPushCallBack;
@@ -11,17 +11,22 @@ import org.jivesoftware.smack.XMPPConnection;
 /**
  *
  * @author MyPC
- * @date 2018/6/20
+ * @date 2018/6/21
  */
 
-public abstract class BaseSmackPushActivity extends AppCompatActivity implements SmackPushCallBack {
+public class BaseSmackPushFragment extends Fragment implements SmackPushCallBack {
 
     protected void showToast(String msg){
-        Toast.makeText(this,msg,Toast.LENGTH_LONG).show();
+        Toast.makeText(getActivity(),msg,Toast.LENGTH_LONG).show();
     }
 
     @Override
     public void registerAccount(boolean success, String msg) {
+
+    }
+
+    @Override
+    public void chatCreated(String content, boolean createdLocally) {
 
     }
 
@@ -46,6 +51,11 @@ public abstract class BaseSmackPushActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void connectionClosedOnError(Exception e) {
+
+    }
+
+    @Override
     public void reconnectionSuccessful() {
 
     }
@@ -57,11 +67,6 @@ public abstract class BaseSmackPushActivity extends AppCompatActivity implements
 
     @Override
     public void reconnectionFailed(Exception e) {
-        showToast(e.getMessage());
-    }
-
-    @Override
-    public void connectionClosedOnError(Exception e) {
         showToast(e.getMessage());
     }
 }
