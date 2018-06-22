@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- *
+ * Smack 中 RosterGroup 类对应的自建类
  * @author MyPC
  * @date 2018/6/8
  */

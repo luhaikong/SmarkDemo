@@ -21,6 +21,7 @@ import com.smack.adapter.RoomAdapter;
 import com.smack.xmpp.XmppConnectionFlag;
 import com.smack.xmpp.XmppConnectionManager;
 import com.smack.xmppentity.RoomHosted;
+import com.smack.xmppentity.RoomMucInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,7 +96,8 @@ public class RoomFragment extends BaseSmackPushFragment {
                         mAdapter.setOnItemOnClickListener(new RoomAdapter.OnItemOnClickListener() {
                             @Override
                             public void onClick(RoomHosted roomHosted) {
-                                showToast(roomHosted.toString());
+//                                showDetail(roomHosted);
+                                createChatRoom(roomHosted.getJid(),"第三个聊天室","123");
                             }
                         });
                         mRecyclerView.setAdapter(mAdapter);
@@ -122,4 +124,42 @@ public class RoomFragment extends BaseSmackPushFragment {
             }
         });
     }
+
+    private void createChatRoom(String mucjid, String nickName, String password){
+        XmppConnectionManager.newInstance().createChatRoom(new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                switch (msg.what){
+                    case XmppConnectionFlag.KEY_FRIENDS_SUCCESS:
+                        requestData(true);
+                        break;
+                    case XmppConnectionFlag.KEY_FRIENDS_FAIL:
+                        showToast("创建聊天室失败！");
+                        break;
+                    default:
+                        break;
+                }
+            }
+        },mucjid,nickName,password);
+    }
+
+    private void showDetail(RoomHosted roomHosted){
+        XmppConnectionManager.newInstance().getRoomInfo(new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                switch (msg.what) {
+                    case XmppConnectionFlag.KEY_FRIENDS_SUCCESS:
+                        Bundle bundle = msg.getData();
+                        RoomMucInfo info = (RoomMucInfo) bundle.getSerializable(XmppConnectionFlag.KEY_FRIENDS_SUCCESS_PARAMS);
+                        showAlertDialog("结果",info.toString());
+                        break;
+                    default:
+                        break;
+                }
+            }
+        },roomHosted.getJid());
+    }
+
 }

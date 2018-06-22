@@ -11,6 +11,7 @@ import android.widget.TextView;
 import com.smack.R;
 import com.smack.xmppentity.RoomHosted;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -40,7 +41,7 @@ public class RoomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public RoomAdapter(Context cxt, List<RoomHosted> mList) {
         this.cxt = cxt;
-        this.mList = mList;
+        this.mList = mList==null?new ArrayList<RoomHosted>():mList;
     }
 
     @Override
@@ -54,7 +55,7 @@ public class RoomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         VHHostedRoom vhHostedRoom = (VHHostedRoom) holder;
         final RoomHosted roomHosted = mList.get(position);
-        vhHostedRoom.tv_roomName.setText(roomHosted.getName());
+        vhHostedRoom.tv_roomName.setText(roomHosted.getName().concat("[").concat(roomHosted.getJid()).concat("]"));
         vhHostedRoom.tv_roomCount.setText(String.valueOf(roomHosted.getCount()));
         vhHostedRoom.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -84,4 +85,6 @@ public class RoomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             tv_roomCount = (TextView) itemView.findViewById(R.id.tv_roomCount);
         }
     }
+
+
 }

@@ -92,6 +92,7 @@ public class MainActivity2 extends BaseSmackPushActivity {
         mBundle = savedInstanceState;
         mContext = this;
         toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         initBottomNavigation();
         initFragment(savedInstanceState,"消息");
@@ -100,10 +101,6 @@ public class MainActivity2 extends BaseSmackPushActivity {
     @Override
     public void setTitle(CharSequence title) {
         toolbar.setTitle(title);
-    }
-
-    public void setMenu(){
-
     }
 
     @Override

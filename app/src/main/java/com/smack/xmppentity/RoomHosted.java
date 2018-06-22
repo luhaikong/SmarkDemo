@@ -3,7 +3,7 @@ package com.smack.xmppentity;
 import java.io.Serializable;
 
 /**
- *
+ * Smack 中 HostedRoom 类对应的自建类
  * @author MyPC
  * @date 2018/6/21
  */

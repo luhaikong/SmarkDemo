@@ -3,6 +3,7 @@ package com.smack.xmpp;
 import android.text.TextUtils;
 
 import com.smack.xmppentity.RoomHosted;
+import com.smack.xmppentity.RoomMucInfo;
 
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.SmackConfiguration;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -50,12 +52,21 @@ public class XmppRoomManager {
         MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
         try {
             List<HostedRoom> list = manager.getHostedRooms(connection.getServiceName());
+            roomHosteds = new ArrayList<>();
             if (list!=null&&list.size()>0){
-                roomHosteds = new ArrayList<>();
                 for (HostedRoom room:list){
                     RoomHosted hosted = new RoomHosted();
                     hosted.setJid(room.getJid());
                     hosted.setName(room.getName());
+                    roomHosteds.add(hosted);
+                }
+            }
+
+            List<String> joinRooms = queryMucRooms(connection);
+            if (joinRooms!=null&&joinRooms.size()>0){
+                for (String room:joinRooms){
+                    RoomHosted hosted = new RoomHosted();
+                    hosted.setName(room);
                     roomHosteds.add(hosted);
                 }
             }
@@ -118,7 +129,6 @@ public class XmppRoomManager {
         try {
             MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
             MultiUserChat muc = manager.getMultiUserChat(jid);
-            // Create the room
             muc.create(nickName);
             Form form = muc.getConfigurationForm();
             // 根据原始表单创建一个要提交的新表单。
@@ -268,20 +278,18 @@ public class XmppRoomManager {
     }
 
     /**
-     * 查询联系人userJid所在的房间
+     * 查询已加入的房间
      * @param connection
-     * @param userJid
      * @return
      */
-    public List<String> queryMucRooms(XMPPTCPConnection connection, String userJid){
+    public List<String> queryMucRooms(XMPPTCPConnection connection){
         MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
         List<String> joinedRooms = new ArrayList<>();
-        try {
-             joinedRooms = manager.getJoinedRooms(userJid);
-        } catch (SmackException.NoResponseException
-                | XMPPException.XMPPErrorException
-                | SmackException.NotConnectedException e) {
-            e.printStackTrace();
+        Set<String> joinedRoomSet = manager.getJoinedRooms();
+        if (joinedRoomSet!=null&&joinedRoomSet.size()>0){
+            for (String s:joinedRoomSet){
+                joinedRooms.add(s);
+            }
         }
         return joinedRooms;
     }
@@ -292,18 +300,35 @@ public class XmppRoomManager {
      * @param mucJid
      * @return
      */
-    public RoomInfo queryMucRoomInfo(XMPPTCPConnection connection, String mucJid){
+    public RoomMucInfo queryMucRoomInfo(XMPPTCPConnection connection, String mucJid){
         MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
-        RoomInfo info = null;
+        RoomMucInfo mucInfo = null;
         try {
-            info = manager.getRoomInfo(mucJid);
-            System.out.println("Number of occupants:" + info.getOccupantsCount());
-            System.out.println("Room Subject:" + info.getSubject());
+            RoomInfo info = manager.getRoomInfo(mucJid);
+            mucInfo = new RoomMucInfo();
+            mucInfo.setName(info.getName());
+            mucInfo.setContactJid(info.getContactJids());
+            mucInfo.setDescription(info.getDescription());
+            mucInfo.setLang(info.getLang());
+            mucInfo.setLdapgroup(info.getLdapGroup());
+            String logs = info.getLogsUrl()==null?"":info.getLogsUrl().toString();
+            mucInfo.setLogs(logs);
+            mucInfo.setMaxhistoryfetch(info.getMaxHistoryFetch());
+            mucInfo.setMembersOnly(info.isMembersOnly());
+            mucInfo.setModerated(info.isModerated());
+            mucInfo.setNonanonymous(info.isNonanonymous());
+            mucInfo.setOccupantsCount(info.getOccupantsCount());
+            mucInfo.setPasswordProtected(info.isPasswordProtected());
+            mucInfo.setPersistent(info.isPersistent());
+            mucInfo.setPubsub(info.getPubSub());
+            mucInfo.setRoom(info.getRoom());
+            mucInfo.setSubject(info.getSubject());
+            mucInfo.setSubjectmod(info.isSubjectModifiable());
         } catch (SmackException.NoResponseException
                 | XMPPException.XMPPErrorException
                 | SmackException.NotConnectedException e) {
             e.printStackTrace();
         }
-        return info;
+        return mucInfo;
     }
 }

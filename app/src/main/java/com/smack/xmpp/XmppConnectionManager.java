@@ -12,6 +12,7 @@ import com.smack.receiver.IntentReceiver;
 import com.smack.service.SmackPushCallBack;
 import com.smack.xmppentity.GroupFriend;
 import com.smack.xmppentity.RoomHosted;
+import com.smack.xmppentity.RoomMucInfo;
 
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackException;
@@ -23,6 +24,7 @@ import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
+import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -439,6 +441,46 @@ public class XmppConnectionManager {
         });
     }
 
+    public void getRoomInfo(final Handler handler, final String mucJid){
+        if (getConnectionAndInit() == null) {
+            return;
+        }
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                RoomMucInfo roomMucInfo = XmppRoomManager.newInstance().queryMucRoomInfo(connection,mucJid);
+                if (handler!=null){
+                    Message message = new Message();
+                    message.what = XmppConnectionFlag.KEY_FRIENDS_SUCCESS;
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable(XmppConnectionFlag.KEY_FRIENDS_SUCCESS_PARAMS, (Serializable) roomMucInfo);
+                    message.setData(bundle);
+                    handler.sendMessage(message);
+                }
+            }
+        });
+    }
+
+    public void createChatRoom(final Handler handler, final String mucJid, final String nickName, final String password){
+        if (getConnectionAndInit() == null) {
+            return;
+        }
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                MultiUserChat muc = XmppRoomManager.newInstance().createChatRoom(connection,mucJid,nickName,password);
+                if (handler!=null){
+                    Message message = new Message();
+                    if (muc!=null){
+                        message.what = XmppConnectionFlag.KEY_FRIENDS_SUCCESS;
+                    } else {
+                        message.what = XmppConnectionFlag.KEY_FRIENDS_FAIL;
+                    }
+                    handler.sendMessage(message);
+                }
+            }
+        });
+    }
 
     public XMPPTCPConnection getConnection() {
         if (connection==null){
