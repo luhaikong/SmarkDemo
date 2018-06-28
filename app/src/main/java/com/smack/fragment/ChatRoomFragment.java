@@ -74,7 +74,7 @@ public class ChatRoomFragment extends BaseSmackPushFragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.menu_room_add:
-                showToast("创建房间！");
+                showAlertDialog("提示","创建房间！");
 //                createChatRoom(mRoomHosted.getJid(),"","");
                 break;
             default:
