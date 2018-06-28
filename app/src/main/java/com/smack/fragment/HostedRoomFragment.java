@@ -1,5 +1,6 @@
 package com.smack.fragment;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -32,13 +33,19 @@ import java.util.List;
  * @date 2018/6/21
  */
 
-public class RoomFragment extends BaseSmackPushFragment {
+public class HostedRoomFragment extends BaseSmackPushFragment {
 
-    public static RoomFragment newInstance(Bundle bundle){
-        RoomFragment fragment = new RoomFragment();
+    public static HostedRoomFragment newInstance(Bundle bundle){
+        HostedRoomFragment fragment = new HostedRoomFragment();
         fragment.setArguments(bundle);
         return fragment;
     }
+
+    public interface INextInterface{
+        void toChatRoom(RoomHosted roomHosted);
+    }
+
+    private INextInterface iNextInterface;
 
     private SwipeRefreshLayout refreshLayout;
     private RecyclerView mRecyclerView;
@@ -48,9 +55,9 @@ public class RoomFragment extends BaseSmackPushFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        getActivity().setTitle(getString(R.string.title_chatRoom));
+        getActivity().setTitle(getString(R.string.title_hostedRoom));
         setHasOptionsMenu(true);
-        View view = inflater.inflate(R.layout.fragment_friend,container,false);
+        View view = inflater.inflate(R.layout.fragment_room,container,false);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.recyclerView);
         refreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.refreshLayout);
 
@@ -59,24 +66,6 @@ public class RoomFragment extends BaseSmackPushFragment {
         requestData(true);
 
         return view;
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_roomf, menu);
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
-            case R.id.menu_room_add:
-
-                break;
-            default:
-                break;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     private void requestData(boolean b) {
@@ -96,8 +85,9 @@ public class RoomFragment extends BaseSmackPushFragment {
                         mAdapter.setOnItemOnClickListener(new RoomAdapter.OnItemOnClickListener() {
                             @Override
                             public void onClick(RoomHosted roomHosted) {
-//                                showDetail(roomHosted);
-                                createChatRoom(roomHosted.getJid(),"第三个聊天室","123");
+                                if (iNextInterface!=null){
+                                    iNextInterface.toChatRoom(roomHosted);
+                                }
                             }
                         });
                         mRecyclerView.setAdapter(mAdapter);
@@ -125,24 +115,6 @@ public class RoomFragment extends BaseSmackPushFragment {
         });
     }
 
-    private void createChatRoom(String mucjid, String nickName, String password){
-        XmppConnectionManager.newInstance().createChatRoom(new Handler(){
-            @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-                switch (msg.what){
-                    case XmppConnectionFlag.KEY_FRIENDS_SUCCESS:
-                        requestData(true);
-                        break;
-                    case XmppConnectionFlag.KEY_FRIENDS_FAIL:
-                        showToast("创建聊天室失败！");
-                        break;
-                    default:
-                        break;
-                }
-            }
-        },mucjid,nickName,password);
-    }
 
     private void showDetail(RoomHosted roomHosted){
         XmppConnectionManager.newInstance().getRoomInfo(new Handler(){
@@ -162,4 +134,9 @@ public class RoomFragment extends BaseSmackPushFragment {
         },roomHosted.getJid());
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        iNextInterface = (INextInterface) context;
+    }
 }

@@ -18,12 +18,9 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
-import org.jivesoftware.smackx.xdata.Form;
-import org.jivesoftware.smackx.xdata.FormField;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -52,6 +49,38 @@ public class XmppRoomManager {
         MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
         try {
             List<HostedRoom> list = manager.getHostedRooms(connection.getServiceName());
+            roomHosteds = new ArrayList<>();
+            if (list!=null&&list.size()>0){
+                for (HostedRoom room:list){
+                    RoomHosted hosted = new RoomHosted();
+                    hosted.setJid(room.getJid());
+                    hosted.setName(room.getName());
+                    roomHosteds.add(hosted);
+                }
+            }
+
+            List<String> joinRooms = queryMucRooms(connection);
+            if (joinRooms!=null&&joinRooms.size()>0){
+                for (String room:joinRooms){
+                    RoomHosted hosted = new RoomHosted();
+                    hosted.setName(room);
+                    roomHosteds.add(hosted);
+                }
+            }
+            return roomHosteds;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * 获取服务器上的所有群组
+     */
+    public List<RoomHosted> getHostedRooms2(XMPPTCPConnection connection, String serviceName) {
+        MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
+        try {
+            List<HostedRoom> list = manager.getHostedRooms(serviceName);
             roomHosteds = new ArrayList<>();
             if (list!=null&&list.size()>0){
                 for (HostedRoom room:list){
@@ -130,46 +159,6 @@ public class XmppRoomManager {
             MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
             MultiUserChat muc = manager.getMultiUserChat(jid);
             muc.create(nickName);
-            Form form = muc.getConfigurationForm();
-            // 根据原始表单创建一个要提交的新表单。
-            Form submitForm = form.createAnswerForm();
-            // 向要提交的表单添加默认答复
-            for (Iterator<FormField> fields = (Iterator<FormField>) form.getFields(); fields.hasNext();) {
-                FormField field = (FormField) fields.next();
-                if (!FormField.Type.hidden.equals(field.getType())
-                        && field.getVariable() != null) {
-                    // 设置默认值作为答复
-                    submitForm.setDefaultAnswer(field.getVariable());
-                }
-            }
-            // 设置聊天室的新拥有者
-            List<String> owners = new ArrayList<String>();
-            owners.add(connection.getUser());// 用户JID
-            submitForm.setAnswer("muc#roomconfig_roomowners", owners);
-            // 设置聊天室是持久聊天室，即将要被保存下来
-            submitForm.setAnswer("muc#roomconfig_persistentroom", true);
-            // 房间仅对成员开放
-            submitForm.setAnswer("muc#roomconfig_membersonly", false);
-            // 允许占有者邀请其他人
-            submitForm.setAnswer("muc#roomconfig_allowinvites", true);
-            if (!password.equals("")) {
-                // 进入是否需要密码
-                submitForm.setAnswer("muc#roomconfig_passwordprotectedroom", true);
-                // 设置进入密码
-                submitForm.setAnswer("muc#roomconfig_roomsecret", password);
-            }
-            // 能够发现占有者真实 JID 的角色
-            // submitForm.setAnswer("muc#roomconfig_whois", "anyone");
-            // 登录房间对话
-            submitForm.setAnswer("muc#roomconfig_enablelogging", true);
-            // 仅允许注册的昵称登录
-            submitForm.setAnswer("x-muc#roomconfig_reservednick", true);
-            // 允许使用者修改昵称
-            submitForm.setAnswer("x-muc#roomconfig_canchangenick", false);
-            // 允许用户注册房间
-            submitForm.setAnswer("x-muc#roomconfig_registration", false);
-            // 发送已完成的表单（有默认值）到服务器来配置聊天室
-            muc.sendConfigurationForm(submitForm);
             return muc;
         } catch (Exception e) {
             e.printStackTrace();

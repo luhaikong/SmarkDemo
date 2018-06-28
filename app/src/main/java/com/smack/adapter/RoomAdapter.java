@@ -57,6 +57,11 @@ public class RoomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         final RoomHosted roomHosted = mList.get(position);
         vhHostedRoom.tv_roomName.setText(roomHosted.getName().concat("[").concat(roomHosted.getJid()).concat("]"));
         vhHostedRoom.tv_roomCount.setText(String.valueOf(roomHosted.getCount()));
+        if (!roomHosted.getJid().contains("@")){
+            vhHostedRoom.iv_roomAvatar.setBackgroundResource(R.mipmap.ic_launcher);
+        } else {
+            vhHostedRoom.iv_roomAvatar.setBackgroundResource(R.mipmap.ic_launcher_round);
+        }
         vhHostedRoom.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -9,6 +9,7 @@
     <string name="act_chat_title">好友昵称</string>
 
     <string name="title_msg">消息</string>
+    <string name="title_hostedRoom">聊天服务</string>
     <string name="title_chatRoom">聊天室</string>
     <string name="title_friends">联系人</string>
 

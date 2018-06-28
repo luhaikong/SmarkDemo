@@ -16,10 +16,12 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
+import com.smack.fragment.ChatRoomFragment;
 import com.smack.fragment.FriendFragment;
+import com.smack.fragment.HostedRoomFragment;
 import com.smack.fragment.MessageFragment;
-import com.smack.fragment.RoomFragment;
 import com.smack.service.SmackPushService;
+import com.smack.xmppentity.RoomHosted;
 
 /**
  *
@@ -27,7 +29,7 @@ import com.smack.service.SmackPushService;
  * @date 2018/6/21
  */
 
-public class MainActivity2 extends BaseSmackPushActivity {
+public class MainActivity2 extends BaseSmackPushActivity implements HostedRoomFragment.INextInterface {
 
     private Bundle mBundle;
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -37,13 +39,13 @@ public class MainActivity2 extends BaseSmackPushActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.navigation_msg:
-                    replaceFragment(mBundle,getString(R.string.title_msg));
+                    replaceFragment(mBundle,getString(R.string.title_msg),null);
                     return true;
                 case R.id.navigation_friends:
-                    replaceFragment(mBundle,getString(R.string.title_friends));
+                    replaceFragment(mBundle,getString(R.string.title_friends),null);
                     return true;
                 case R.id.navigation_chatRoom:
-                    replaceFragment(mBundle,getString(R.string.title_chatRoom));
+                    replaceFragment(mBundle,getString(R.string.title_hostedRoom),null);
                     return true;
                 default:
                     break;
@@ -166,9 +168,9 @@ public class MainActivity2 extends BaseSmackPushActivity {
                 break;
             case "聊天室":
                 mTransaction.add(R.id.content
-                        , savedInstanceState==null? RoomFragment
-                                .newInstance(null):mManager.findFragmentByTag("RoomFragment")
-                        , "RoomFragment");
+                        , savedInstanceState==null? HostedRoomFragment
+                                .newInstance(null):mManager.findFragmentByTag("HostedRoomFragment")
+                        , "HostedRoomFragment");
                 break;
             default:
                 break;
@@ -176,27 +178,34 @@ public class MainActivity2 extends BaseSmackPushActivity {
         mTransaction.commit();
     }
 
-    private void replaceFragment(Bundle savedInstanceState,String title){
+    private void replaceFragment(Bundle savedInstanceState,String title,Bundle data){
         FragmentManager mManager = getSupportFragmentManager();
         FragmentTransaction mTransaction = mManager.beginTransaction();
         switch (title){
             case "消息":
                 mTransaction.replace(R.id.content
                         , savedInstanceState==null? MessageFragment
-                                .newInstance(null):mManager.findFragmentByTag("MessageFragment")
+                                .newInstance(data):mManager.findFragmentByTag("MessageFragment")
                         , "MessageFragment");
                 break;
             case "联系人":
                 mTransaction.replace(R.id.content
                         , savedInstanceState==null? FriendFragment
-                                .newInstance(null):mManager.findFragmentByTag("FriendFragment")
+                                .newInstance(data):mManager.findFragmentByTag("FriendFragment")
                         , "FriendFragment");
                 break;
             case "聊天室":
+                mTransaction.add(R.id.content
+                        , savedInstanceState==null? ChatRoomFragment
+                                .newInstance(data):mManager.findFragmentByTag("ChatRoomFragment")
+                        , "ChatRoomFragment");
+                mTransaction.addToBackStack("ChatRoomFragment");
+                break;
+            case "聊天服务":
                 mTransaction.replace(R.id.content
-                        , savedInstanceState==null? RoomFragment
-                                .newInstance(null):mManager.findFragmentByTag("RoomFragment")
-                        , "RoomFragment");
+                        , savedInstanceState==null? HostedRoomFragment
+                                .newInstance(data):mManager.findFragmentByTag("HostedRoomFragment")
+                        , "HostedRoomFragment");
                 break;
             default:
                 break;
@@ -213,4 +222,10 @@ public class MainActivity2 extends BaseSmackPushActivity {
         handler.sendMessage(message);
     }
 
+    @Override
+    public void toChatRoom(RoomHosted roomHosted) {
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(RoomHosted.OBJ,roomHosted);
+        replaceFragment(mBundle,getString(R.string.title_chatRoom),bundle);
+    }
 }

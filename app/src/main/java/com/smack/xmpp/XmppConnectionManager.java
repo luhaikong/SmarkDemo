@@ -441,6 +441,26 @@ public class XmppConnectionManager {
         });
     }
 
+    public void getHostedRooms2(final Handler handler, final String serviceName){
+        if (getConnectionAndInit() == null) {
+            return;
+        }
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                List<RoomHosted> list = XmppRoomManager.newInstance().getHostedRooms2(connection,serviceName);
+                if (handler!=null){
+                    Message message = new Message();
+                    message.what = XmppConnectionFlag.KEY_FRIENDS_SUCCESS;
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable(XmppConnectionFlag.KEY_FRIENDS_SUCCESS_PARAMS, (Serializable) list);
+                    message.setData(bundle);
+                    handler.sendMessage(message);
+                }
+            }
+        });
+    }
+
     public void getRoomInfo(final Handler handler, final String mucJid){
         if (getConnectionAndInit() == null) {
             return;

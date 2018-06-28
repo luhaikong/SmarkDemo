@@ -10,6 +10,8 @@ import java.io.Serializable;
 
 public class RoomHosted implements Serializable {
 
+    public final static String OBJ="obj";
+
     private String jid;
 
     private String name;
