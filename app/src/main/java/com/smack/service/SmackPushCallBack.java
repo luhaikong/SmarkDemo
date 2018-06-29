@@ -31,4 +31,17 @@ public interface SmackPushCallBack extends ConnectionListener {
      * @param config
      */
     public void logout(XmppUserConfig config);
+
+    /**
+     * 监听群聊消息
+     * @param content
+     */
+    public void processMessage(String content);
+
+    /**
+     * 监听聊天室主题变更
+     * @param subject
+     * @param from
+     */
+    public void subjectUpdated(String subject, String from);
 }

@@ -481,14 +481,14 @@ public class XmppConnectionManager {
         });
     }
 
-    public void createChatRoom(final Handler handler, final String mucJid, final String nickName, final String password){
+    public void createChatRoom(final Handler handler, final String mucJid, final XmppRoomConfig config){
         if (getConnectionAndInit() == null) {
             return;
         }
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                MultiUserChat muc = XmppRoomManager.newInstance().createChatRoom(connection,mucJid,nickName,password);
+                MultiUserChat muc = XmppRoomManager.newInstance().createChatRoom(connection,mucJid,config);
                 if (handler!=null){
                     Message message = new Message();
                     if (muc!=null){
@@ -501,6 +501,49 @@ public class XmppConnectionManager {
             }
         });
     }
+
+    public void setChatRoom(final Handler handler, final String mucJid, final XmppRoomConfig config){
+        if (getConnectionAndInit() == null) {
+            return;
+        }
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                MultiUserChat muc = XmppRoomManager.newInstance().setChatRoom(connection,mucJid,config);
+                if (handler!=null){
+                    Message message = new Message();
+                    if (muc!=null){
+                        message.what = XmppConnectionFlag.KEY_FRIENDS_SUCCESS;
+                    } else {
+                        message.what = XmppConnectionFlag.KEY_FRIENDS_FAIL;
+                    }
+                    handler.sendMessage(message);
+                }
+            }
+        });
+    }
+
+    public void changeRoomSubject(final Handler handler, final String mucJid, final String subject){
+        if (getConnectionAndInit() == null) {
+            return;
+        }
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                MultiUserChat muc = XmppRoomManager.newInstance().changeRoomSubject(connection,mucJid,subject);
+                if (handler!=null){
+                    Message message = new Message();
+                    if (muc!=null){
+                        message.what = XmppConnectionFlag.KEY_FRIENDS_SUCCESS;
+                    } else {
+                        message.what = XmppConnectionFlag.KEY_FRIENDS_FAIL;
+                    }
+                    handler.sendMessage(message);
+                }
+            }
+        });
+    }
+
 
     public XMPPTCPConnection getConnection() {
         if (connection==null){

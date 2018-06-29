@@ -1,7 +1,11 @@
 package com.smack.xmpp;
 
+import android.content.Context;
+import android.content.Intent;
 import android.text.TextUtils;
 
+import com.smack.receiver.IntentReceiver;
+import com.smack.service.SmackPushCallBack;
 import com.smack.xmppentity.RoomHosted;
 import com.smack.xmppentity.RoomMucInfo;
 
@@ -18,6 +22,8 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
+import org.jivesoftware.smackx.xdata.Form;
+import org.jivesoftware.smackx.xdata.FormField;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,6 +46,12 @@ public class XmppRoomManager {
 
     public static XmppRoomManager newInstance(){
         return XmppRoomManager.Holder.singleton;
+    }
+
+    private SmackPushCallBack smackPushCallBack;
+
+    public void setSmackPushCallBack(SmackPushCallBack smackPushCallBack) {
+        this.smackPushCallBack = smackPushCallBack;
     }
 
     /**
@@ -110,14 +122,22 @@ public class XmppRoomManager {
      * 监听这个群的所有会话消息
      * @param jid 格式为>>群组名称@conference.ip
      */
-    private void initListener(XMPPTCPConnection connection, String jid) {
+    private void initListener(XMPPTCPConnection connection, String jid, final Context context) {
         MultiUserChat multiUserChat = MultiUserChatManager.getInstanceFor(connection).getMultiUserChat(jid);
         multiUserChat.addMessageListener(new MessageListener() {
             @Override
             public void processMessage(final Message message) {
                 //当消息返回为空的时候，表示用户正在聊天窗口编辑信息并未发出消息
-                if (!TextUtils.isEmpty(message.getBody())) {
-                    //收到的消息
+                if (message.getBody()!=null) {
+                    if (smackPushCallBack!=null){
+                        smackPushCallBack.processMessage(message.getBody());
+                    }
+                    if (context!=null){
+                        Intent intent = new Intent();
+                        intent.setAction(IntentReceiver.IntentEnum.NOTIFICATION_RECEIVED);
+                        intent.putExtra(IntentReceiver.EXTRA,message.getBody());
+                        context.sendBroadcast(intent);
+                    }
                 }
             }
         });
@@ -148,17 +168,51 @@ public class XmppRoomManager {
     }
 
     /**
-     * 创建群聊聊天室
-     * @param jid 聊天室jid
-     * @param nickName 创建者在聊天室中的昵称
-     * @param password 聊天室密码
+     *
+     * @param connection
+     * @param jid
+     * @param config
      * @return
      */
-    public MultiUserChat createChatRoom(XMPPTCPConnection connection, String jid, String nickName, String password) {
+    public MultiUserChat createChatRoom(XMPPTCPConnection connection, String jid, XmppRoomConfig config) {
         try {
             MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
-            MultiUserChat muc = manager.getMultiUserChat(jid);
-            muc.create(nickName);
+            MultiUserChat muc = manager.getMultiUserChat(config.getRoomNick().concat("@").concat(jid));
+            muc.create(config.getRoomNick());
+            return muc;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * 设置聊天室的属性
+     * @param connection
+     * @param jid
+     * @param config
+     * @return
+     */
+    public MultiUserChat setChatRoom(XMPPTCPConnection connection, String jid, XmppRoomConfig config){
+        try {
+            MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
+            MultiUserChat muc = manager.getMultiUserChat(config.getRoomNick().concat("@").concat(jid));
+            Form form = muc.getConfigurationForm();
+            Form answerForm = form.createAnswerForm();
+            for(FormField field:form.getFields()){
+                if (!FormField.Type.hidden.name().equals(field.getType())&&field.getVariable()!=null){
+                    answerForm.setDefaultAnswer(field.getVariable());
+                }
+            }
+            answerForm.setAnswer(XmppRoomConfig.FLAG_PERSISTENTROOM,config.isPersistentroom());
+            answerForm.setAnswer(XmppRoomConfig.FLAG_MEMBERSONLY,config.isMembersonly());
+            answerForm.setAnswer(XmppRoomConfig.FLAG_ALLOWINVITES,config.isAllowinvites());
+            //answerForm.setAnswer(XmppRoomConfig.FLAG_WHOIS,"anyone");
+            answerForm.setAnswer(XmppRoomConfig.FLAG_ENABLELOGGING,config.isEnablelogging());
+            answerForm.setAnswer(XmppRoomConfig.FLAG_RESERVEDNICK,config.isReservednick());
+            answerForm.setAnswer(XmppRoomConfig.FLAG_CANCHANGENICK,config.isCanchangenick());
+            answerForm.setAnswer(XmppRoomConfig.FLAG_REGISTRATION,config.isRegistration());
+            muc.sendConfigurationForm(answerForm);
             return muc;
         } catch (Exception e) {
             e.printStackTrace();
@@ -229,17 +283,19 @@ public class XmppRoomManager {
      * @param mucJid
      * @return
      */
-    public MultiUserChat changesOnRoomSubject(XMPPTCPConnection connection, String mucJid){
+    public MultiUserChat changeRoomSubject(XMPPTCPConnection connection, String mucJid, String subject){
         MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
         MultiUserChat muc2 = manager.getMultiUserChat(mucJid);
         muc2.addSubjectUpdatedListener(new SubjectUpdatedListener() {
             @Override
             public void subjectUpdated(String subject, String from) {
-                // 监听聊天室的主题变更
+                if (smackPushCallBack!=null){
+                    smackPushCallBack.subjectUpdated(subject, from);
+                }
             }
         });
         try {
-            muc2.changeSubject("New Subject");
+            muc2.changeSubject(subject);
         } catch (SmackException.NoResponseException
                 | XMPPException.XMPPErrorException
                 | SmackException.NotConnectedException e) {

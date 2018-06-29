@@ -13,4 +13,10 @@
     <string name="title_chatRoom">聊天室</string>
     <string name="title_friends">联系人</string>
 
+    <string name="dialog_hint_roomName">请输入房间名</string>
+    <string name="dialog_hint_roomPw">请输入房间密码</string>
+    <string name="dialog_hint_roomForever">永久房间</string>
+    <string name="dialog_hint_roomPrivate">私有房间</string>
+    <string name="dialog_hint_roomProject">请输入房间主题</string>
+
 </resources>

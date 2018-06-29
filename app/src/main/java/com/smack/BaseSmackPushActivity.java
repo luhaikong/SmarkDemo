@@ -14,7 +14,7 @@ import org.jivesoftware.smack.XMPPConnection;
  * @date 2018/6/20
  */
 
-public abstract class BaseSmackPushActivity extends AppCompatActivity implements SmackPushCallBack {
+public class BaseSmackPushActivity extends AppCompatActivity implements SmackPushCallBack {
 
     protected void showToast(String msg){
         Toast.makeText(this,msg,Toast.LENGTH_LONG).show();
@@ -26,7 +26,22 @@ public abstract class BaseSmackPushActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void chatCreated(String content, boolean createdLocally) {
+
+    }
+
+    @Override
     public void logout(XmppUserConfig config) {
+
+    }
+
+    @Override
+    public void processMessage(String content) {
+
+    }
+
+    @Override
+    public void subjectUpdated(String subject, String from) {
 
     }
 

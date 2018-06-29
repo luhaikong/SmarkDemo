@@ -45,13 +45,15 @@ public class SmackPushReceiver extends BroadcastReceiver {
                 content = intent.getStringExtra(IntentReceiver.EXTRA);
                 break;
             case IntentReceiver.IntentEnum.NOTIFICATION_RECEIVED:
-                content = intent.getStringExtra(IntentReceiver.EXTRA);
-                notificationId = (int) (System.currentTimeMillis() / 1000);
-                Intent clickIntent = new Intent(context, SmackPushReceiver.class);
-                clickIntent.setAction(IntentReceiver.IntentEnum.NOTIFICATION_OPENED);
-                PendingIntent pi = PendingIntent.getBroadcast(context, notificationId, clickIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                Notification notification = showNotification(context,"ticker",pi,"这是标题","这是内容");
-                notificationManager.notify(notificationId,notification);
+                content = intent.getStringExtra(IntentReceiver.EXTRA)==null?"":intent.getStringExtra(IntentReceiver.EXTRA);
+                if (content!=null){
+                    notificationId = (int) (System.currentTimeMillis() / 1000);
+                    Intent clickIntent = new Intent(context, SmackPushReceiver.class);
+                    clickIntent.setAction(IntentReceiver.IntentEnum.NOTIFICATION_OPENED);
+                    PendingIntent pi = PendingIntent.getBroadcast(context, notificationId, clickIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    Notification notification = showNotification(context,"ticker",pi,"这是标题","这是内容");
+                    notificationManager.notify(notificationId,notification);
+                }
                 break;
             case IntentReceiver.IntentEnum.NOTIFICATION_OPENED:
                 Log.d("SmackPushReceiver","用户打开了该推送！");

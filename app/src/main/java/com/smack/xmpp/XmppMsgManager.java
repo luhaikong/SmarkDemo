@@ -87,14 +87,16 @@ public class XmppMsgManager {
                 chat.addMessageListener(new ChatMessageListener() {
                     @Override
                     public void processMessage(Chat chat, Message message) {
-                        if (smackPushCallBack!=null){
-                            smackPushCallBack.chatCreated(message.getBody(),createdLocally);
-                        }
-                        if (context!=null){
-                            Intent intent = new Intent();
-                            intent.setAction(IntentReceiver.IntentEnum.NOTIFICATION_RECEIVED);
-                            intent.putExtra(IntentReceiver.EXTRA,message.getBody());
-                            context.sendBroadcast(intent);
+                        if (message.getBody()!=null){
+                            if (smackPushCallBack!=null){
+                                smackPushCallBack.chatCreated(message.getBody(),createdLocally);
+                            }
+                            if (context!=null){
+                                Intent intent = new Intent();
+                                intent.setAction(IntentReceiver.IntentEnum.NOTIFICATION_RECEIVED);
+                                intent.putExtra(IntentReceiver.EXTRA,message.getBody());
+                                context.sendBroadcast(intent);
+                            }
                         }
                     }
                 });

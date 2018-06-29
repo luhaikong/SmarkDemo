@@ -51,6 +51,16 @@ public class BaseSmackPushFragment extends Fragment implements SmackPushCallBack
     }
 
     @Override
+    public void processMessage(String content) {
+
+    }
+
+    @Override
+    public void subjectUpdated(String subject, String from) {
+
+    }
+
+    @Override
     public void connected(XMPPConnection connection) {
 
     }

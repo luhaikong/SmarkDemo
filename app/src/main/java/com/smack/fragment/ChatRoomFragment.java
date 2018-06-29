@@ -1,6 +1,6 @@
 package com.smack.fragment;
 
-import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -19,8 +19,11 @@ import android.view.ViewGroup;
 import com.smack.BaseSmackPushFragment;
 import com.smack.R;
 import com.smack.adapter.RoomAdapter;
+import com.smack.dialog.DialogCreateRoom;
+import com.smack.dialog.DialogEditRoom;
 import com.smack.xmpp.XmppConnectionFlag;
 import com.smack.xmpp.XmppConnectionManager;
+import com.smack.xmpp.XmppRoomConfig;
 import com.smack.xmppentity.RoomHosted;
 import com.smack.xmppentity.RoomMucInfo;
 
@@ -33,7 +36,8 @@ import java.util.List;
  * @date 2018/6/21
  */
 
-public class ChatRoomFragment extends BaseSmackPushFragment {
+public class ChatRoomFragment extends BaseSmackPushFragment implements DialogCreateRoom.IonClickListener
+        ,DialogEditRoom.IonClickListener {
 
     public static ChatRoomFragment newInstance(Bundle bundle){
         ChatRoomFragment fragment = new ChatRoomFragment();
@@ -74,8 +78,9 @@ public class ChatRoomFragment extends BaseSmackPushFragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.menu_room_add:
-                showAlertDialog("提示","创建房间！");
-//                createChatRoom(mRoomHosted.getJid(),"","");
+                DialogCreateRoom.newInstance(null)
+                        .setIonClickListener(this)
+                        .show(getFragmentManager(),"DialogCreateRoom");
                 break;
             default:
                 break;
@@ -100,7 +105,11 @@ public class ChatRoomFragment extends BaseSmackPushFragment {
                         mAdapter.setOnItemOnClickListener(new RoomAdapter.OnItemOnClickListener() {
                             @Override
                             public void onClick(RoomHosted roomHosted) {
-
+                                Bundle bd = new Bundle();
+                                bd.putSerializable(RoomHosted.OBJ,roomHosted);
+                                DialogEditRoom.newInstance(bd)
+                                        .setIonClickListener(ChatRoomFragment.this)
+                                        .show(getFragmentManager(),"DialogEditRoom");
                             }
                         });
                         mRecyclerView.setAdapter(mAdapter);
@@ -128,14 +137,14 @@ public class ChatRoomFragment extends BaseSmackPushFragment {
         });
     }
 
-    private void createChatRoom(String mucjid, String nickName, String password){
+    private void createChatRoom(final String mucjid, final XmppRoomConfig config){
         XmppConnectionManager.newInstance().createChatRoom(new Handler(){
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
                 switch (msg.what){
                     case XmppConnectionFlag.KEY_FRIENDS_SUCCESS:
-                        requestData(true);
+                        setChatRoom(mucjid, config);
                         break;
                     case XmppConnectionFlag.KEY_FRIENDS_FAIL:
                         showToast("创建聊天室失败！");
@@ -144,7 +153,65 @@ public class ChatRoomFragment extends BaseSmackPushFragment {
                         break;
                 }
             }
-        },mucjid,nickName,password);
+        },mucjid,config);
     }
 
+    private void setChatRoom(String mucjid, XmppRoomConfig config){
+        XmppConnectionManager.newInstance().setChatRoom(new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                switch (msg.what){
+                    case XmppConnectionFlag.KEY_FRIENDS_SUCCESS:
+                        requestData(true);
+                        break;
+                    case XmppConnectionFlag.KEY_FRIENDS_FAIL:
+                        showToast("设置聊天室属性失败！");
+                        break;
+                    default:
+                        break;
+                }
+            }
+        },mucjid,config);
+    }
+
+    private void changeRoomSubject(String mucJid, String subject){
+        XmppConnectionManager.newInstance().changeRoomSubject(new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                switch (msg.what){
+                    case XmppConnectionFlag.KEY_FRIENDS_SUCCESS:
+                        showToast("修改主题成功！");
+                        requestData(true);
+                        break;
+                    case XmppConnectionFlag.KEY_FRIENDS_FAIL:
+                        showToast("设置聊天室属性失败！");
+                        break;
+                    default:
+                        break;
+                }
+            }
+        },mucJid,subject);
+    }
+
+    @Override
+    public void onPositiveClick(XmppRoomConfig config) {
+        createChatRoom(mRoomHosted.getJid(),config);
+    }
+
+    @Override
+    public void onPositiveClick(String mucJid, String subject) {
+        changeRoomSubject(mucJid, subject);
+    }
+
+    @Override
+    public void onNegativeClick(DialogInterface dialog, int which, String tag) {
+
+    }
+
+    @Override
+    public void subjectUpdated(String subject, String from) {
+
+    }
 }

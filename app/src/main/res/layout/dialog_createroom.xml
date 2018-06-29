@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <EditText
+        android:id="@+id/et_roomName"
+        android:hint="@string/dialog_hint_roomName"
+        android:drawableLeft="@mipmap/ic_launcher_round"
+        android:drawableStart="@mipmap/ic_launcher_round"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <EditText
+        android:id="@+id/et_roomPw"
+        android:hint="@string/dialog_hint_roomPw"
+        android:drawableLeft="@mipmap/ic_launcher_round"
+        android:drawableStart="@mipmap/ic_launcher_round"
+        android:inputType="textPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <CheckBox
+            android:id="@+id/cb_roomForever"
+            android:text="@string/dialog_hint_roomForever"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <CheckBox
+            android:id="@+id/cb_roomPrivate"
+            android:text="@string/dialog_hint_roomPrivate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+</LinearLayout>
