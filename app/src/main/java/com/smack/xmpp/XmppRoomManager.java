@@ -212,6 +212,7 @@ public class XmppRoomManager {
             answerForm.setAnswer(XmppRoomConfig.FLAG_RESERVEDNICK,config.isReservednick());
             answerForm.setAnswer(XmppRoomConfig.FLAG_CANCHANGENICK,config.isCanchangenick());
             answerForm.setAnswer(XmppRoomConfig.FLAG_REGISTRATION,config.isRegistration());
+            answerForm.setAnswer(XmppRoomConfig.FLAG_CHANGESUBJECT,config.isChangesubject());
             muc.sendConfigurationForm(answerForm);
             return muc;
         } catch (Exception e) {

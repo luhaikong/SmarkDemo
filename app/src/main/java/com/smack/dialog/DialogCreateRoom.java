@@ -82,6 +82,7 @@ public class DialogCreateRoom extends DialogFragment {
                             builder1.setReservednick(true);
                             builder1.setCanchangenick(false);
                             builder1.setRegistration(false);
+                            builder1.setChangesubject(true);
                             XmppRoomConfig config = builder1.create();
                             ionClickListener.onPositiveClick(config);
                         }
