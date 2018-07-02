@@ -27,8 +27,11 @@ import org.jivesoftware.smackx.xdata.FormField;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  *
@@ -39,6 +42,7 @@ import java.util.Set;
 public class XmppRoomManager {
 
     private List<RoomHosted> roomHosteds;
+    private Map<String,MessageListener> messageListeners = new HashMap<>();
 
     private static class Holder {
         private static XmppRoomManager singleton = new XmppRoomManager();
@@ -122,25 +126,35 @@ public class XmppRoomManager {
      * 监听这个群的所有会话消息
      * @param jid 格式为>>群组名称@conference.ip
      */
-    private void initListener(XMPPTCPConnection connection, String jid, final Context context) {
-        MultiUserChat multiUserChat = MultiUserChatManager.getInstanceFor(connection).getMultiUserChat(jid);
-        multiUserChat.addMessageListener(new MessageListener() {
-            @Override
-            public void processMessage(final Message message) {
-                //当消息返回为空的时候，表示用户正在聊天窗口编辑信息并未发出消息
-                if (message.getBody()!=null) {
-                    if (smackPushCallBack!=null){
-                        smackPushCallBack.processMessage(message.getBody());
-                    }
-                    if (context!=null){
-                        Intent intent = new Intent();
-                        intent.setAction(IntentReceiver.IntentEnum.NOTIFICATION_RECEIVED);
-                        intent.putExtra(IntentReceiver.EXTRA,message.getBody());
-                        context.sendBroadcast(intent);
+    public void initListener(XMPPTCPConnection connection, final String jid, final Context context) {
+        if (messageListeners.get(jid)==null){
+            MultiUserChat multiUserChat = MultiUserChatManager.getInstanceFor(connection).getMultiUserChat(jid);
+            MessageListener listener = new MessageListener() {
+                @Override
+                public void processMessage(Message message) {
+                    //当消息返回为空的时候，表示用户正在聊天窗口编辑信息并未发出消息
+                    if (message.getBody()!=null) {
+                        if (smackPushCallBack!=null){
+                            XmppConnectionManager manager = XmppConnectionManager.newInstance();
+                            String uNickName = manager.getOfXmppUserConfig().getAttr().get("name");
+                            if (message.getFrom().equals(jid.concat("/").concat(uNickName))){
+                                smackPushCallBack.processMessage(message.getBody(),true);
+                            } else {
+                                smackPushCallBack.processMessage(message.getBody(),false);
+                            }
+                        }
+                        if (context!=null){
+                            Intent intent = new Intent();
+                            intent.setAction(IntentReceiver.IntentEnum.NOTIFICATION_RECEIVED);
+                            intent.putExtra(IntentReceiver.EXTRA,message.getBody());
+                            context.sendBroadcast(intent);
+                        }
                     }
                 }
-            }
-        });
+            };
+            messageListeners.put(jid,listener);
+            multiUserChat.addMessageListener(listener);
+        }
     }
 
     /**
@@ -148,12 +162,20 @@ public class XmppRoomManager {
      * @param connection
      * @param jid
      */
-    public void sendMessage(XMPPTCPConnection connection, String jid){
-        MultiUserChat multiUserChat = MultiUserChatManager.getInstanceFor(connection).getMultiUserChat(jid);
+    public void sendMessage(XMPPTCPConnection connection, OutGoMsgListener listener, String jid, String content){
         try {
-            multiUserChat.sendMessage("Hello World");
+            MultiUserChat multiUserChat = MultiUserChatManager.getInstanceFor(connection).getMultiUserChat(jid);
+            Message newMessage = new Message();
+            newMessage.setBody(content);
+            multiUserChat.sendMessage(newMessage);
+            if (listener!=null){
+                listener.onOutGoSuccess(content);
+            }
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
+            if (listener!=null){
+                listener.onOutGoFail(content);
+            }
         }
     }
 
@@ -297,12 +319,13 @@ public class XmppRoomManager {
         });
         try {
             muc2.changeSubject(subject);
+            return muc2;
         } catch (SmackException.NoResponseException
                 | XMPPException.XMPPErrorException
                 | SmackException.NotConnectedException e) {
             e.printStackTrace();
+            return null;
         }
-        return muc2;
     }
 
     /**

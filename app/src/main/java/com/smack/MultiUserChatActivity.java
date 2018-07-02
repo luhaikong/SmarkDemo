@@ -30,16 +30,16 @@ import java.util.List;
 /**
  * @author MyPC
  */
-public class ChatActivity extends BaseSmackPushActivity implements View.OnClickListener, OutGoMsgListener {
+public class MultiUserChatActivity extends BaseSmackPushActivity implements View.OnClickListener, OutGoMsgListener {
 
-    public final static String TAG = ChatActivity.class.getSimpleName();
+    public final static String TAG = MultiUserChatActivity.class.getSimpleName();
     private Context mContext;
     private Toolbar toolbar;
 
     private RecyclerView mRecyclerView;
     private ChatAdapter mAdapter;
     private List<XmppMessage> mList = new ArrayList<>();
-    private GroupFriend.ItemFriend itemFriend;
+    private RoomHosted roomHosted;
 
     private Button btn_send;
     private EditText et_content;
@@ -50,7 +50,7 @@ public class ChatActivity extends BaseSmackPushActivity implements View.OnClickL
         public void onServiceConnected(ComponentName name, IBinder service) {
             pushBinder = (SmackPushService.SmackPushBinder) service;
             SmackPushService pushService = pushBinder.getService();
-            pushService.addChatListener(ChatActivity.this);
+            pushService.addChatListener(MultiUserChatActivity.this,roomHosted.getJid());
         }
 
         @Override
@@ -94,9 +94,9 @@ public class ChatActivity extends BaseSmackPushActivity implements View.OnClickL
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         mContext = this;
-        itemFriend = getIntent().getSerializableExtra(GroupFriend.ItemFriend.OBJ)==null?
-                new GroupFriend.ItemFriend(): (GroupFriend.ItemFriend) getIntent().getSerializableExtra(GroupFriend.ItemFriend.OBJ);
-        setTitle(itemFriend.getName());
+        roomHosted = getIntent().getSerializableExtra(RoomHosted.OBJ)==null?
+                new RoomHosted(): (RoomHosted) getIntent().getSerializableExtra(RoomHosted.OBJ);
+        setTitle(roomHosted.getName());
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(R.drawable.ic_chevron_left_black_24dp);
@@ -157,7 +157,7 @@ public class ChatActivity extends BaseSmackPushActivity implements View.OnClickL
         switch (v.getId()){
             case R.id.btn_send:
                 String str = et_content.getText().toString();
-                XmppConnectionManager.newInstance().sendMessageSin(this,itemFriend.getUser(),str);
+                XmppConnectionManager.newInstance().sendMessageMuc(this,roomHosted.getJid(),str);
                 et_content.setText("");
                 break;
             default:
@@ -172,13 +172,7 @@ public class ChatActivity extends BaseSmackPushActivity implements View.OnClickL
 
     @Override
     public void onOutGoSuccess(String content) {
-        Log.d(TAG,content);
-        Message msg = new Message();
-        msg.what = 2;
-        Bundle bd = new Bundle();
-        bd.putSerializable("body",content);
-        msg.setData(bd);
-        mHandler.sendMessage(msg);
+        //此处不需要了，processMessage方法会有回调
     }
 
     @Override
@@ -187,9 +181,14 @@ public class ChatActivity extends BaseSmackPushActivity implements View.OnClickL
     }
 
     @Override
-    public void chatCreated(String content, boolean createdLocally) {
+    public void processMessage(String content, boolean createdLocally) {
+        super.processMessage(content, createdLocally);
         Message msg = new Message();
-        msg.what = 1;
+        if (createdLocally){
+            msg.what = 2;
+        } else {
+            msg.what = 1;
+        }
         Bundle bd = new Bundle();
         bd.putString("body",content);
         msg.setData(bd);

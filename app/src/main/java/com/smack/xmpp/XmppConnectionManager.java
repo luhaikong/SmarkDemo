@@ -382,9 +382,25 @@ public class XmppConnectionManager {
         });
     }
 
+    public void addChatRoomListener(SmackPushCallBack smackPushCallBack, final String jid){
+        if (getConnectionAndInit() == null) {
+            return;
+        }
+        XmppRoomManager.newInstance().setSmackPushCallBack(smackPushCallBack);
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                XmppRoomManager.newInstance().initListener(connection,jid,ofContext);
+            }
+        });
+    }
+
     public void sendMessageSin(final OutGoMsgListener listener, final String toJid, final String content){
         if (getConnectionAndInit() == null) {
             return;
+        }
+        if (listener!=null){
+            listener.onOutGoing();
         }
         executorService.submit(new Runnable() {
             @Override
@@ -394,11 +410,19 @@ public class XmppConnectionManager {
         });
     }
 
-    public void sendMessageMuc(){
+    public void sendMessageMuc(final OutGoMsgListener listener, final String toJid, final String content){
         if (getConnectionAndInit() == null) {
             return;
         }
-
+        if (listener!=null){
+            listener.onOutGoing();
+        }
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                XmppRoomManager.newInstance().sendMessage(connection,listener,toJid,content);
+            }
+        });
     }
 
     public void getFriendList(final Handler handler){
@@ -544,6 +568,26 @@ public class XmppConnectionManager {
         });
     }
 
+    public void join(final Handler handler, final String jid, final String nickName, final String password){
+        if (getConnectionAndInit() == null) {
+            return;
+        }
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                MultiUserChat muc = XmppRoomManager.newInstance().join(connection,jid,nickName,password);
+                if (handler!=null){
+                    Message message = new Message();
+                    if (muc!=null){
+                        message.what = XmppConnectionFlag.KEY_FRIENDS_SUCCESS;
+                    } else {
+                        message.what = XmppConnectionFlag.KEY_FRIENDS_FAIL;
+                    }
+                    handler.sendMessage(message);
+                }
+            }
+        });
+    }
 
     public XMPPTCPConnection getConnection() {
         if (connection==null){

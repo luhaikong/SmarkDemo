@@ -81,4 +81,8 @@ public class SmackPushService extends Service {
         XmppConnectionManager.newInstance().addChatListener(smackPushCallBack);
     }
 
+    public void addChatListener(SmackPushCallBack smackPushCallBack,String jid){
+        XmppConnectionManager.newInstance().addChatRoomListener(smackPushCallBack,jid);
+    }
+
 }

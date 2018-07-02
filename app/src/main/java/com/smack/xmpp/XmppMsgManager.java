@@ -111,9 +111,6 @@ public class XmppMsgManager {
      */
     public void sendMessage(XMPPTCPConnection connection,String jid,OutGoMsgListener listener,String content){
         try {
-            if (listener!=null){
-                listener.onOutGoing();
-            }
             ChatManager chatManager =  ChatManager.getInstanceFor(connection);
             Chat chat = chatManager.createChat(jid);
             Message newMessage = new Message();

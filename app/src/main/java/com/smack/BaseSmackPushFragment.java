@@ -51,7 +51,7 @@ public class BaseSmackPushFragment extends Fragment implements SmackPushCallBack
     }
 
     @Override
-    public void processMessage(String content) {
+    public void processMessage(String content, boolean createdLocally) {
 
     }
 

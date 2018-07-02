@@ -89,6 +89,11 @@ public class HostedRoomFragment extends BaseSmackPushFragment {
                                     iNextInterface.toChatRoom(roomHosted);
                                 }
                             }
+
+                            @Override
+                            public void onLongClick(RoomHosted roomHosted) {
+
+                            }
                         });
                         mRecyclerView.setAdapter(mAdapter);
                         break;

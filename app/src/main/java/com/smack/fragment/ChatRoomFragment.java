@@ -1,5 +1,6 @@
 package com.smack.fragment;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,6 +25,7 @@ import com.smack.dialog.DialogEditRoom;
 import com.smack.xmpp.XmppConnectionFlag;
 import com.smack.xmpp.XmppConnectionManager;
 import com.smack.xmpp.XmppRoomConfig;
+import com.smack.xmpp.XmppUserConfig;
 import com.smack.xmppentity.RoomHosted;
 import com.smack.xmppentity.RoomMucInfo;
 
@@ -50,6 +52,12 @@ public class ChatRoomFragment extends BaseSmackPushFragment implements DialogCre
     private RoomAdapter mAdapter;
     private List<RoomHosted> mList = new ArrayList<>();
     private RoomHosted mRoomHosted;
+
+    public interface IJoinInterface{
+        void joinChatRoom(RoomHosted roomHosted);
+    }
+
+    private IJoinInterface iJoinInterface;
 
     @Nullable
     @Override
@@ -88,6 +96,12 @@ public class ChatRoomFragment extends BaseSmackPushFragment implements DialogCre
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        iJoinInterface = (IJoinInterface) context;
+    }
+
     private void requestData(boolean b) {
         XmppConnectionManager.newInstance().getHostedRooms2(new Handler(){
             @Override
@@ -105,6 +119,11 @@ public class ChatRoomFragment extends BaseSmackPushFragment implements DialogCre
                         mAdapter.setOnItemOnClickListener(new RoomAdapter.OnItemOnClickListener() {
                             @Override
                             public void onClick(RoomHosted roomHosted) {
+                                joinRoom(roomHosted,"");
+                            }
+
+                            @Override
+                            public void onLongClick(RoomHosted roomHosted) {
                                 Bundle bd = new Bundle();
                                 bd.putSerializable(RoomHosted.OBJ,roomHosted);
                                 DialogEditRoom.newInstance(bd)
@@ -193,6 +212,31 @@ public class ChatRoomFragment extends BaseSmackPushFragment implements DialogCre
                 }
             }
         },mucJid,subject);
+    }
+
+    private void joinRoom(final RoomHosted roomHosted, String password){
+        XmppConnectionManager manager = XmppConnectionManager.newInstance();
+        String uNickName = manager.getOfXmppUserConfig().getAttr().get("name");
+        manager.join(new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                switch (msg.what){
+                    case XmppConnectionFlag.KEY_FRIENDS_SUCCESS:
+                        showToast("加入房间成功！");
+                        requestData(true);
+                        if (iJoinInterface!=null){
+                            iJoinInterface.joinChatRoom(roomHosted);
+                        }
+                        break;
+                    case XmppConnectionFlag.KEY_FRIENDS_FAIL:
+                        showToast("加入房间失败！");
+                        break;
+                    default:
+                        break;
+                }
+            }
+        },roomHosted.getJid(),uNickName,password);
     }
 
     @Override

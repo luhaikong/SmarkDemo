@@ -35,8 +35,9 @@ public interface SmackPushCallBack extends ConnectionListener {
     /**
      * 监听群聊消息
      * @param content
+     * @param createdLocally
      */
-    public void processMessage(String content);
+    public void processMessage(String content, boolean createdLocally);
 
     /**
      * 监听聊天室主题变更

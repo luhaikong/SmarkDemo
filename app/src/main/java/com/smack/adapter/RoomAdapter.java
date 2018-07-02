@@ -29,6 +29,8 @@ public class RoomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public interface OnItemOnClickListener{
         void onClick(RoomHosted roomHosted);
+
+        void onLongClick(RoomHosted roomHosted);
     }
 
     /**
@@ -68,6 +70,15 @@ public class RoomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 if (onItemOnClickListener!=null){
                     onItemOnClickListener.onClick(roomHosted);
                 }
+            }
+        });
+        vhHostedRoom.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (onItemOnClickListener!=null){
+                    onItemOnClickListener.onLongClick(roomHosted);
+                }
+                return false;
             }
         });
     }

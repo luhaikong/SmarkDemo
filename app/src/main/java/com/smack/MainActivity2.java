@@ -29,7 +29,8 @@ import com.smack.xmppentity.RoomHosted;
  * @date 2018/6/21
  */
 
-public class MainActivity2 extends BaseSmackPushActivity implements HostedRoomFragment.INextInterface {
+public class MainActivity2 extends BaseSmackPushActivity implements HostedRoomFragment.INextInterface
+        ,ChatRoomFragment.IJoinInterface {
 
     private Bundle mBundle;
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -76,11 +77,24 @@ public class MainActivity2 extends BaseSmackPushActivity implements HostedRoomFr
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             Bundle bundle = msg.getData();
-            String body = bundle.getString("body");
             FragmentManager mManager = getSupportFragmentManager();
-            FriendFragment fragment = (FriendFragment) mManager.findFragmentByTag("FriendFragment");
-            if (fragment!=null){
-                fragment.showToast(body);
+            switch (msg.what){
+                case 1:
+                    String body1 = bundle.getString("body");
+                    FriendFragment fragment1 = (FriendFragment) mManager.findFragmentByTag("FriendFragment");
+                    if (fragment1!=null){
+                        fragment1.showToast(body1);
+                    }
+                    break;
+                case 2:
+                    String body2 = bundle.getString("body");
+                    ChatRoomFragment fragment2 = (ChatRoomFragment) mManager.findFragmentByTag("ChatRoomFragment");
+                    if (fragment2!=null){
+                        fragment2.showToast(body2);
+                    }
+                    break;
+                default:
+                    break;
             }
         }
     };
@@ -216,6 +230,18 @@ public class MainActivity2 extends BaseSmackPushActivity implements HostedRoomFr
     @Override
     public void chatCreated(String content, boolean createdLocally) {
         Message message = new Message();
+        message.what = 1;
+        Bundle bundle = new Bundle();
+        bundle.putString("body",content);
+        message.setData(bundle);
+        handler.sendMessage(message);
+    }
+
+    @Override
+    public void processMessage(String content, boolean createdLocally) {
+        super.processMessage(content,createdLocally);
+        Message message = new Message();
+        message.what = 2;
         Bundle bundle = new Bundle();
         bundle.putString("body",content);
         message.setData(bundle);
@@ -227,5 +253,15 @@ public class MainActivity2 extends BaseSmackPushActivity implements HostedRoomFr
         Bundle bundle = new Bundle();
         bundle.putSerializable(RoomHosted.OBJ,roomHosted);
         replaceFragment(mBundle,getString(R.string.title_chatRoom),bundle);
+    }
+
+    @Override
+    public void joinChatRoom(RoomHosted roomHosted) {
+        SmackPushService service = pushBinder.getService();
+        service.addChatListener(this,roomHosted.getJid());
+
+        Intent intent = new Intent(mContext,MultiUserChatActivity.class);
+        intent.putExtra(RoomHosted.OBJ,roomHosted);
+        startActivity(intent);
     }
 }

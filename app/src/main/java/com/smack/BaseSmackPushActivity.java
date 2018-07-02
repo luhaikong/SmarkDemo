@@ -36,7 +36,7 @@ public class BaseSmackPushActivity extends AppCompatActivity implements SmackPus
     }
 
     @Override
-    public void processMessage(String content) {
+    public void processMessage(String content, boolean createdLocally) {
 
     }
 
