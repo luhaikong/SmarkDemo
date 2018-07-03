@@ -86,7 +86,7 @@ public class XmppConnectionManager {
      * 更改用户状态
      */
     public void setPresence(int code) {
-        if (getConnectionAndInit() == null) {
+        if (getConnectionAndLogin() == null) {
             return;
         }
         Presence presence;
@@ -165,6 +165,10 @@ public class XmppConnectionManager {
                     }
                 } catch (XMPPException | SmackException | IOException e) {
                     e.printStackTrace();
+                    String message = "Client is already logged in";
+                    if (e instanceof org.jivesoftware.smack.SmackException && message.equals(e.getMessage())){
+                        smackPushCallBack.authenticated(connection,true);
+                    }
                 }
             }
         });
@@ -179,18 +183,20 @@ public class XmppConnectionManager {
      */
     public void logout(final Handler handler) {
         isLogoutNormal = true;
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    connection.instantShutdown();
-                    sendHandlerMsg(XmppConnectionFlag.KEY_LOGOUT_SUCCESS,handler);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    sendHandlerMsg(XmppConnectionFlag.KEY_LOGOUT_FAIL,handler);
+        if (connection!=null||connection.isConnected()){
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        connection.instantShutdown();
+                        sendHandlerMsg(XmppConnectionFlag.KEY_LOGOUT_SUCCESS,handler);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        sendHandlerMsg(XmppConnectionFlag.KEY_LOGOUT_FAIL,handler);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -202,7 +208,7 @@ public class XmppConnectionManager {
      * @code false 修改失败
      */
     public void changePassword(final String newPassword, final Handler handler) {
-        if (getConnectionAndInit() == null) {
+        if (getConnectionAndLogin() == null) {
             return;
         }
         executorService.submit(new Runnable() {
@@ -241,46 +247,6 @@ public class XmppConnectionManager {
                     } else {
                         manager.createAccount(ofXmppUserConfig.getOfUserName(), ofXmppUserConfig.getOfPassword(),ofXmppUserConfig.getAttr());
                     }
-                    login();
-                    if (smackPushCallBack!=null){
-                        smackPushCallBack.registerAccount(true,"");
-                    }
-                    if (ofContext!=null){
-                        Intent intent = new Intent(IntentReceiver.IntentEnum.REGISTRATION);
-                        ofContext.sendBroadcast(intent);
-                    }
-                } catch (SmackException.NoResponseException
-                        |XMPPException.XMPPErrorException
-                        |SmackException.NotConnectedException e){
-                    e.printStackTrace();
-                    if (smackPushCallBack!=null){
-                        smackPushCallBack.registerAccount(false,e.getMessage());
-                    }
-                }
-            }
-        });
-    }
-
-    /**
-     * 创建一个新用户,然后登录
-     * @see AccountManager
-     */
-    private void registerAccount(){
-        if (getConnectionAndInit() == null) {
-            return;
-        }
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                AccountManager manager = AccountManager.getInstance(connection);
-                manager.sensitiveOperationOverInsecureConnection(true);
-                try {
-                    if (ofXmppUserConfig.getAttr() == null) {
-                        manager.createAccount(ofXmppUserConfig.getOfUserName(), ofXmppUserConfig.getOfPassword());
-                    } else {
-                        manager.createAccount(ofXmppUserConfig.getOfUserName(), ofXmppUserConfig.getOfPassword(), ofXmppUserConfig.getAttr());
-                    }
-                    login();
                     if (smackPushCallBack!=null){
                         smackPushCallBack.registerAccount(true,"createAccount success！");
                     }
@@ -288,17 +254,17 @@ public class XmppConnectionManager {
                         Intent intent = new Intent(IntentReceiver.IntentEnum.REGISTRATION);
                         ofContext.sendBroadcast(intent);
                     }
+                    login();
                 } catch (SmackException.NoResponseException
                         |XMPPException.XMPPErrorException
                         |SmackException.NotConnectedException e){
                     e.printStackTrace();
+                    if (smackPushCallBack!=null){
+                        smackPushCallBack.registerAccount(false,e.getMessage());
+                    }
                     String message = "XMPPError: conflict - cancel";
                     if (e instanceof org.jivesoftware.smack.XMPPException && message.equals(e.getMessage())){
                         login();
-                        return;
-                    }
-                    if (smackPushCallBack!=null){
-                        smackPushCallBack.registerAccount(false,e.getMessage());
                     }
                 }
             }
@@ -369,8 +335,10 @@ public class XmppConnectionManager {
         });
     }
 
+
+
     public void addChatListener(SmackPushCallBack smackPushCallBack){
-        if (getConnectionAndInit() == null) {
+        if (getConnectionAndLogin() == null) {
             return;
         }
         XmppMsgManager.newInstance().setSmackPushCallBack(smackPushCallBack);
@@ -383,7 +351,7 @@ public class XmppConnectionManager {
     }
 
     public void addChatRoomListener(SmackPushCallBack smackPushCallBack, final String jid){
-        if (getConnectionAndInit() == null) {
+        if (getConnectionAndLogin() == null) {
             return;
         }
         XmppRoomManager.newInstance().setSmackPushCallBack(smackPushCallBack);
@@ -396,7 +364,7 @@ public class XmppConnectionManager {
     }
 
     public void sendMessageSin(final OutGoMsgListener listener, final String toJid, final String content){
-        if (getConnectionAndInit() == null) {
+        if (getConnectionAndLogin() == null) {
             return;
         }
         if (listener!=null){
@@ -411,7 +379,7 @@ public class XmppConnectionManager {
     }
 
     public void sendMessageMuc(final OutGoMsgListener listener, final String toJid, final String content){
-        if (getConnectionAndInit() == null) {
+        if (getConnectionAndLogin() == null) {
             return;
         }
         if (listener!=null){
@@ -426,7 +394,7 @@ public class XmppConnectionManager {
     }
 
     public void getFriendList(final Handler handler){
-        if (getConnectionAndInit() == null) {
+        if (getConnectionAndLogin() == null) {
             return;
         }
         executorService.submit(new Runnable() {
@@ -446,7 +414,7 @@ public class XmppConnectionManager {
     }
 
     public void getHostedRooms(final Handler handler){
-        if (getConnectionAndInit() == null) {
+        if (getConnectionAndLogin() == null) {
             return;
         }
         executorService.submit(new Runnable() {
@@ -466,7 +434,7 @@ public class XmppConnectionManager {
     }
 
     public void getHostedRooms2(final Handler handler, final String serviceName){
-        if (getConnectionAndInit() == null) {
+        if (getConnectionAndLogin() == null) {
             return;
         }
         executorService.submit(new Runnable() {
@@ -486,7 +454,7 @@ public class XmppConnectionManager {
     }
 
     public void getRoomInfo(final Handler handler, final String mucJid){
-        if (getConnectionAndInit() == null) {
+        if (getConnectionAndLogin() == null) {
             return;
         }
         executorService.submit(new Runnable() {
@@ -506,7 +474,7 @@ public class XmppConnectionManager {
     }
 
     public void createChatRoom(final Handler handler, final String mucJid, final XmppRoomConfig config){
-        if (getConnectionAndInit() == null) {
+        if (getConnectionAndLogin() == null) {
             return;
         }
         executorService.submit(new Runnable() {
@@ -527,7 +495,7 @@ public class XmppConnectionManager {
     }
 
     public void setChatRoom(final Handler handler, final String mucJid, final XmppRoomConfig config){
-        if (getConnectionAndInit() == null) {
+        if (getConnectionAndLogin() == null) {
             return;
         }
         executorService.submit(new Runnable() {
@@ -548,7 +516,7 @@ public class XmppConnectionManager {
     }
 
     public void changeRoomSubject(final Handler handler, final String mucJid, final String subject){
-        if (getConnectionAndInit() == null) {
+        if (getConnectionAndLogin() == null) {
             return;
         }
         executorService.submit(new Runnable() {
@@ -569,7 +537,7 @@ public class XmppConnectionManager {
     }
 
     public void join(final Handler handler, final String jid, final String nickName, final String password){
-        if (getConnectionAndInit() == null) {
+        if (getConnectionAndLogin() == null) {
             return;
         }
         executorService.submit(new Runnable() {
@@ -596,23 +564,38 @@ public class XmppConnectionManager {
         return connection;
     }
 
-    public XMPPTCPConnection getConnectionAndInit() {
-        if (connection==null){
+    public XMPPTCPConnection getConnectionAndLogin() {
+        if (connection==null||!connection.isConnected()){
             executorService.submit(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        if (connection == null) {
-                            connection = new XMPPTCPConnection(getConfiguration());
-                            connection.addConnectionListener(onImConnectionListener);
-                            connection.connect();
-                        } else {
-                            if (!connection.isAuthenticated()){
-                                login();
-                            } else {
-                                registerAccount(smackPushCallBack);
-                            }
-                        }
+                        connection = new XMPPTCPConnection(getConfiguration());
+                        connection.addConnectionListener(onImConnectionListener);
+                        connection.connect();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        connection = null;
+                    }
+                }
+            });
+        } else {
+            if (!connection.isAuthenticated()){
+                login();
+            }
+        }
+        return connection;
+    }
+
+    public XMPPTCPConnection getConnectionAndInit() {
+        if (connection==null||!connection.isConnected()){
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        connection = new XMPPTCPConnection(getConfiguration());
+                        connection.addConnectionListener(onImConnectionListener);
+                        connection.connect();
                     } catch (Exception e) {
                         e.printStackTrace();
                         connection = null;
@@ -682,7 +665,7 @@ public class XmppConnectionManager {
          */
         @Override
         public void connected(XMPPConnection connection) {
-            registerAccount();
+            login();
         }
 
         /**
@@ -704,7 +687,7 @@ public class XmppConnectionManager {
             if (isLogoutNormal){
                 logout(null);
             } else {
-                registerAccount();
+                login();
             }
         }
 
@@ -714,7 +697,7 @@ public class XmppConnectionManager {
          */
         @Override
         public void connectionClosedOnError(Exception e) {
-            registerAccount();
+            login();
         }
 
         /**
