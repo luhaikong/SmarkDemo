@@ -63,7 +63,7 @@ public class MainActivity2 extends BaseSmackPushActivity implements HostedRoomFr
         public void onServiceConnected(ComponentName name, IBinder service) {
             pushBinder = (SmackPushService.SmackPushBinder) service;
             SmackPushService pushService = pushBinder.getService();
-            pushService.addChatListener(MainActivity2.this);
+            pushService.setSmackPushCallBack(MainActivity2.this);
         }
 
         @Override
@@ -258,7 +258,7 @@ public class MainActivity2 extends BaseSmackPushActivity implements HostedRoomFr
     @Override
     public void joinChatRoom(RoomHosted roomHosted) {
         SmackPushService service = pushBinder.getService();
-        service.addChatListener(this,roomHosted.getJid());
+        service.addChatListener(roomHosted.getJid());
 
         Intent intent = new Intent(mContext,MultiUserChatActivity.class);
         intent.putExtra(RoomHosted.OBJ,roomHosted);

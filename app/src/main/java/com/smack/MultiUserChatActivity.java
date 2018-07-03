@@ -50,7 +50,8 @@ public class MultiUserChatActivity extends BaseSmackPushActivity implements View
         public void onServiceConnected(ComponentName name, IBinder service) {
             pushBinder = (SmackPushService.SmackPushBinder) service;
             SmackPushService pushService = pushBinder.getService();
-            pushService.addChatListener(MultiUserChatActivity.this,roomHosted.getJid());
+            pushService.setSmackPushCallBack(MultiUserChatActivity.this);
+            pushService.addChatListener(roomHosted.getJid());
         }
 
         @Override

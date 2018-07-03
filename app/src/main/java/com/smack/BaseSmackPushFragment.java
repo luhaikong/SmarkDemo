@@ -1,6 +1,9 @@
 package com.smack;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.widget.Toast;
@@ -20,6 +23,15 @@ public class BaseSmackPushFragment extends Fragment implements SmackPushCallBack
 
     protected void showToast(String msg){
         Toast.makeText(getActivity(),msg,Toast.LENGTH_LONG).show();
+    }
+
+    private void checkNetWork(){
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager)getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo info = connectivityManager.getActiveNetworkInfo();
+        if (info == null || !info.isAvailable()){
+            showToast("当前网络不可用，请检查网络连接！");
+        }
     }
 
     protected void showAlertDialog(String title,String content){
@@ -93,5 +105,11 @@ public class BaseSmackPushFragment extends Fragment implements SmackPushCallBack
     @Override
     public void reconnectionFailed(Exception e) {
         showToast(e.getMessage());
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        checkNetWork();
     }
 }

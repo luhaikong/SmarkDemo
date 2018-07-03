@@ -9,8 +9,13 @@ import android.content.pm.ResolveInfo;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
+import com.smack.ChatActivity;
 import com.smack.xmpp.XmppConnectionManager;
+import com.smack.xmpp.XmppUserConfig;
+
+import org.jivesoftware.smack.XMPPConnection;
 
 import java.util.List;
 
@@ -20,8 +25,9 @@ import java.util.List;
  * @date 2018/6/4
  */
 
-public class SmackPushService extends Service {
+public class SmackPushService extends Service implements SmackPushCallBack {
 
+    public final static String TAG = SmackPushService.class.getSimpleName();
     private SmackPushBinder smackPushBinder = new SmackPushBinder();
 
     public class SmackPushBinder extends Binder {
@@ -30,6 +36,12 @@ public class SmackPushService extends Service {
             return SmackPushService.this;
         }
 
+    }
+
+    private SmackPushCallBack mSmackPushCallBack;
+
+    public void setSmackPushCallBack(SmackPushCallBack smackPushCallBack) {
+        this.mSmackPushCallBack = smackPushCallBack;
     }
 
     @Nullable
@@ -70,19 +82,112 @@ public class SmackPushService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        XmppConnectionManager.newInstance().addChatListener(this);
         return super.onStartCommand(intent, flags, startId);
     }
 
-    public void initConnectionAndLogin(SmackPushCallBack smackPushCallBack){
-        XmppConnectionManager.newInstance().initConnectionAndLogin(smackPushCallBack,getApplicationContext());
+    @Override
+    public void registerAccount(boolean success, String msg) {
+        Log.d(TAG,"----------------registerAccount注册账号回调---------------");
+        if (mSmackPushCallBack!=null){
+            mSmackPushCallBack.registerAccount(success, msg);
+        }
     }
 
-    public void addChatListener(SmackPushCallBack smackPushCallBack){
-        XmppConnectionManager.newInstance().addChatListener(smackPushCallBack);
+    @Override
+    public void chatCreated(String content, boolean createdLocally) {
+        Log.d(TAG,"----------------chatCreated接收消息回调---------------");
+        if (mSmackPushCallBack!=null){
+            mSmackPushCallBack.chatCreated(content, createdLocally);
+        }
     }
 
-    public void addChatListener(SmackPushCallBack smackPushCallBack,String jid){
-        XmppConnectionManager.newInstance().addChatRoomListener(smackPushCallBack,jid);
+    @Override
+    public void logout(XmppUserConfig config) {
+        Log.d(TAG,"----------------logout登出回调---------------");
+        if (mSmackPushCallBack!=null){
+            mSmackPushCallBack.logout(config);
+        }
+    }
+
+    @Override
+    public void processMessage(String content, boolean createdLocally) {
+        Log.d(TAG,"----------------processMessage接受群消息回调---------------");
+        if (mSmackPushCallBack!=null){
+            mSmackPushCallBack.processMessage(content, createdLocally);
+        }
+    }
+
+    @Override
+    public void subjectUpdated(String subject, String from) {
+        Log.d(TAG,"----------------subjectUpdated修改群主题回调---------------");
+        if (mSmackPushCallBack!=null){
+            subjectUpdated(subject, from);
+        }
+    }
+
+    @Override
+    public void connected(XMPPConnection connection) {
+        Log.d(TAG,"----------------connected连接XMPP回调---------------");
+        if (mSmackPushCallBack!=null){
+            mSmackPushCallBack.connected(connection);
+        }
+    }
+
+    @Override
+    public void authenticated(XMPPConnection connection, boolean resumed) {
+        Log.d(TAG,"----------------authenticated登录认证XMPP回调---------------");
+        if (mSmackPushCallBack!=null){
+            mSmackPushCallBack.authenticated(connection, resumed);
+        }
+    }
+
+    @Override
+    public void connectionClosed() {
+        Log.d(TAG,"----------------connectionClosed连接关闭回调---------------");
+        if (mSmackPushCallBack!=null){
+            mSmackPushCallBack.connectionClosed();
+        }
+    }
+
+    @Override
+    public void connectionClosedOnError(Exception e) {
+        Log.d(TAG,"----------------connectionClosedOnError连接异常关闭回调---------------");
+        if (mSmackPushCallBack!=null){
+            mSmackPushCallBack.connectionClosedOnError(e);
+        }
+    }
+
+    @Override
+    public void reconnectionSuccessful() {
+        Log.d(TAG,"----------------reconnectionSuccessful断线重连成功回调---------------");
+        if (mSmackPushCallBack!=null){
+            mSmackPushCallBack.reconnectionSuccessful();
+        }
+    }
+
+    @Override
+    public void reconnectingIn(int seconds) {
+        Log.d(TAG,"----------------reconnectingIn连接将在指定的秒数中重试重新连接回调---------------");
+        if (mSmackPushCallBack!=null){
+            mSmackPushCallBack.reconnectingIn(seconds);
+        }
+    }
+
+    @Override
+    public void reconnectionFailed(Exception e) {
+        Log.d(TAG,"----------------reconnectionFailed连接到服务器的尝试失败了，连接将在一瞬间继续尝试重新连接到服务器---------------");
+        if (mSmackPushCallBack!=null){
+            mSmackPushCallBack.reconnectionFailed(e);
+        }
+    }
+
+    public void initConnectionAndLogin(){
+        XmppConnectionManager.newInstance().initConnectionAndLogin(this,getApplicationContext());
+    }
+
+    public void addChatListener(String jid){
+        XmppConnectionManager.newInstance().addChatRoomListener(this,jid);
     }
 
 }

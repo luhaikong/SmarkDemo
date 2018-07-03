@@ -1,5 +1,10 @@
 package com.smack;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
@@ -78,5 +83,20 @@ public class BaseSmackPushActivity extends AppCompatActivity implements SmackPus
     @Override
     public void connectionClosedOnError(Exception e) {
         showToast(e.getMessage());
+    }
+
+    private void checkNetWork(){
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo info = connectivityManager.getActiveNetworkInfo();
+        if (info == null || !info.isAvailable()){
+            showToast("当前网络不可用，请检查网络连接！");
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkNetWork();
     }
 }

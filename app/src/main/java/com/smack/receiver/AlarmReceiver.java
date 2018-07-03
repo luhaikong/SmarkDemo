@@ -33,6 +33,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                 case Intent.ACTION_USER_PRESENT:
                 case Intent.ACTION_PACKAGE_ADDED:
                 case Intent.ACTION_PACKAGE_REMOVED:
+                case "android.net.conn.CONNECTIVITY_CHANGE":
                     startServiceRepeated(context);
                     break;
                 default:

@@ -39,7 +39,8 @@ public class LoginActivity extends BaseSmackPushActivity implements View.OnClick
         public void onServiceConnected(ComponentName name, IBinder service) {
             pushBinder = (SmackPushService.SmackPushBinder) service;
             SmackPushService pushService = pushBinder.getService();
-            pushService.initConnectionAndLogin(LoginActivity.this);
+            pushService.setSmackPushCallBack(LoginActivity.this);
+            pushService.initConnectionAndLogin();
         }
 
         @Override
@@ -156,17 +157,6 @@ public class LoginActivity extends BaseSmackPushActivity implements View.OnClick
     }
 
     @Override
-    public void connected(XMPPConnection connection) {
-        super.connected(connection);
-        Log.d("LoginActivity","----------------connected---------------");
-    }
-
-    @Override
-    public void registerAccount(boolean success, String msg) {
-        Log.d("LoginActivity","-------------registerAccount------------");
-    }
-
-    @Override
     public void authenticated(XMPPConnection connection, boolean resumed) {
         super.authenticated(connection, resumed);
         Log.d("LoginActivity","----------------authenticated---------------");
@@ -174,23 +164,7 @@ public class LoginActivity extends BaseSmackPushActivity implements View.OnClick
         SharePreferenceMgr.put(mContext,SharePreferenceMgr.KEY_OFUSERNAME,config.getOfUserName());
         SharePreferenceMgr.put(mContext,SharePreferenceMgr.KEY_OFPASSWORD,config.getOfPassword());
 
-        SmackPushService pushService = pushBinder.getService();
-        pushService.addChatListener(this);
         handler.sendEmptyMessage(0);
     }
 
-    @Override
-    public void chatCreated(String content, boolean createdLocally) {
-        Log.d("LoginActivity","----------------chatCreated---------------");
-    }
-
-    @Override
-    public void logout(XmppUserConfig config) {
-        Log.d("LoginActivity","----------------logout---------------");
-    }
-
-    @Override
-    public void connectionClosedOnError(Exception e) {
-        Log.d("LoginActivity","----------------connectionClosedOnError---------------");
-    }
 }

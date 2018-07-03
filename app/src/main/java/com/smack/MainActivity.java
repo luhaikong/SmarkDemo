@@ -43,7 +43,7 @@ public class MainActivity extends BaseSmackPushActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             pushBinder = (SmackPushService.SmackPushBinder) service;
             SmackPushService pushService = pushBinder.getService();
-            pushService.addChatListener(MainActivity.this);
+            pushService.setSmackPushCallBack(MainActivity.this);
         }
 
         @Override

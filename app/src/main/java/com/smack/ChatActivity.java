@@ -50,7 +50,7 @@ public class ChatActivity extends BaseSmackPushActivity implements View.OnClickL
         public void onServiceConnected(ComponentName name, IBinder service) {
             pushBinder = (SmackPushService.SmackPushBinder) service;
             SmackPushService pushService = pushBinder.getService();
-            pushService.addChatListener(ChatActivity.this);
+            pushService.setSmackPushCallBack(ChatActivity.this);
         }
 
         @Override

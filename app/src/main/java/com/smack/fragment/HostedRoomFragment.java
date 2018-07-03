@@ -97,6 +97,11 @@ public class HostedRoomFragment extends BaseSmackPushFragment {
                         });
                         mRecyclerView.setAdapter(mAdapter);
                         break;
+                    case XmppConnectionFlag.KEY_FRIENDS_FAIL:
+                        if (refreshLayout.isRefreshing()){
+                            refreshLayout.setRefreshing(false);
+                        }
+                        break;
                     default:
                         break;
                 }

@@ -86,9 +86,7 @@ public class XmppConnectionManager {
      * 更改用户状态
      */
     public void setPresence(int code) {
-        if (getConnectionAndLogin() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         Presence presence;
         try {
             switch (code) {
@@ -208,9 +206,7 @@ public class XmppConnectionManager {
      * @code false 修改失败
      */
     public void changePassword(final String newPassword, final Handler handler) {
-        if (getConnectionAndLogin() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -233,9 +229,7 @@ public class XmppConnectionManager {
      * @see AccountManager
      */
     public void registerAccount(final SmackPushCallBack smackPushCallBack) {
-        if (getConnectionAndInit() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -338,9 +332,7 @@ public class XmppConnectionManager {
 
 
     public void addChatListener(SmackPushCallBack smackPushCallBack){
-        if (getConnectionAndLogin() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         XmppMsgManager.newInstance().setSmackPushCallBack(smackPushCallBack);
         executorService.submit(new Runnable() {
             @Override
@@ -351,9 +343,7 @@ public class XmppConnectionManager {
     }
 
     public void addChatRoomListener(SmackPushCallBack smackPushCallBack, final String jid){
-        if (getConnectionAndLogin() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         XmppRoomManager.newInstance().setSmackPushCallBack(smackPushCallBack);
         executorService.submit(new Runnable() {
             @Override
@@ -364,9 +354,7 @@ public class XmppConnectionManager {
     }
 
     public void sendMessageSin(final OutGoMsgListener listener, final String toJid, final String content){
-        if (getConnectionAndLogin() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         if (listener!=null){
             listener.onOutGoing();
         }
@@ -379,9 +367,7 @@ public class XmppConnectionManager {
     }
 
     public void sendMessageMuc(final OutGoMsgListener listener, final String toJid, final String content){
-        if (getConnectionAndLogin() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         if (listener!=null){
             listener.onOutGoing();
         }
@@ -394,9 +380,7 @@ public class XmppConnectionManager {
     }
 
     public void getFriendList(final Handler handler){
-        if (getConnectionAndLogin() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -414,9 +398,7 @@ public class XmppConnectionManager {
     }
 
     public void getHostedRooms(final Handler handler){
-        if (getConnectionAndLogin() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -434,9 +416,7 @@ public class XmppConnectionManager {
     }
 
     public void getHostedRooms2(final Handler handler, final String serviceName){
-        if (getConnectionAndLogin() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -454,9 +434,7 @@ public class XmppConnectionManager {
     }
 
     public void getRoomInfo(final Handler handler, final String mucJid){
-        if (getConnectionAndLogin() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -474,9 +452,7 @@ public class XmppConnectionManager {
     }
 
     public void createChatRoom(final Handler handler, final String mucJid, final XmppRoomConfig config){
-        if (getConnectionAndLogin() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -495,9 +471,7 @@ public class XmppConnectionManager {
     }
 
     public void setChatRoom(final Handler handler, final String mucJid, final XmppRoomConfig config){
-        if (getConnectionAndLogin() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -516,9 +490,7 @@ public class XmppConnectionManager {
     }
 
     public void changeRoomSubject(final Handler handler, final String mucJid, final String subject){
-        if (getConnectionAndLogin() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -537,9 +509,7 @@ public class XmppConnectionManager {
     }
 
     public void join(final Handler handler, final String jid, final String nickName, final String password){
-        if (getConnectionAndLogin() == null) {
-            return;
-        }
+        connection = getConnectionAndLogin();
         executorService.submit(new Runnable() {
             @Override
             public void run() {
@@ -573,16 +543,16 @@ public class XmppConnectionManager {
                         connection = new XMPPTCPConnection(getConfiguration());
                         connection.addConnectionListener(onImConnectionListener);
                         connection.connect();
+                        if (!connection.isAuthenticated()){
+                            login();
+                        }
+                        Thread.sleep(2000);
                     } catch (Exception e) {
                         e.printStackTrace();
                         connection = null;
                     }
                 }
             });
-        } else {
-            if (!connection.isAuthenticated()){
-                login();
-            }
         }
         return connection;
     }
