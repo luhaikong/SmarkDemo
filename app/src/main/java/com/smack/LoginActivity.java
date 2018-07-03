@@ -118,7 +118,7 @@ public class LoginActivity extends BaseSmackPushActivity implements View.OnClick
 
     private void initXmppUserConfig(String username,String pwd){
         Map<String,String> attr = new HashMap<>(2);
-        attr.put("name","游客");
+        attr.put("name","游客-布鲁斯");
         attr.put("email","1031359299@qq.com");
         XmppUserConfig config = new XmppUserConfig.Builder()
                 .setOfUserName(username)
