@@ -285,7 +285,7 @@ public class XmppRoomManager {
         try {
             MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
             MultiUserChat muc2 = manager.getMultiUserChat(mucJid);
-            muc2.join(nickNameMySelf);
+            muc2.grantMembership(otherJid);//赋予群成员的权限
             // 监听房间邀请或拒绝邀请
             muc2.addInvitationRejectionListener(new InvitationRejectionListener() {
                 @Override

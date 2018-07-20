@@ -91,7 +91,7 @@ public class DialogCreateRoom extends DialogFragment {
                                     .setMembersonly(true)
                                     .setAllowinvites(true)
                                     .setEnablelogging(true)
-                                    .setReservednick(true)
+                                    .setReservednick(false)
                                     .setCanchangenick(false)
                                     .setRegistration(false)
                                     .setChangesubject(true);
