@@ -33,8 +33,10 @@ public class XmppRoomConfig implements Serializable {
     public final static String FLAG_NAME = "muc#roomconfig_roomname";// 房间名称
     public final static String FLAG_FORM_TYPE = "FORM_TYPE";// 默认值："http://jabber.org/protocol/muc#roomconfig"
 
+    private String roomJidPart;
     private String roomNick;
     private String roomPw;
+    private String roomDesc;
     private boolean persistentroom;
     private boolean membersonly;
     private boolean allowinvites;
@@ -44,6 +46,14 @@ public class XmppRoomConfig implements Serializable {
     private boolean canchangenick;
     private boolean registration;
     private boolean changesubject;
+
+    public String getRoomJidPart() {
+        return roomJidPart;
+    }
+
+    private void setRoomJidPart(String roomJidPart) {
+        this.roomJidPart = roomJidPart;
+    }
 
     public String getRoomNick() {
         return roomNick;
@@ -59,6 +69,14 @@ public class XmppRoomConfig implements Serializable {
 
     private void setRoomPw(String roomPw) {
         this.roomPw = roomPw;
+    }
+
+    public String getRoomDesc() {
+        return roomDesc;
+    }
+
+    private void setRoomDesc(String roomDesc) {
+        this.roomDesc = roomDesc;
     }
 
     public boolean isPersistentroom() {
@@ -134,8 +152,10 @@ public class XmppRoomConfig implements Serializable {
     }
 
     public static class Builder{
+        private String roomJidPart;
         private String roomNick;
         private String roomPw;
+        private String roomDesc;
         private boolean persistentroom;
         private boolean membersonly;
         private boolean allowinvites;
@@ -146,6 +166,11 @@ public class XmppRoomConfig implements Serializable {
         private boolean registration;
         private boolean changesubject;
 
+        public Builder setRoomJidPart(String roomJidPart) {
+            this.roomJidPart = roomJidPart;
+            return this;
+        }
+
         public Builder setRoomNick(String roomNick) {
             this.roomNick = roomNick;
             return this;
@@ -153,6 +178,11 @@ public class XmppRoomConfig implements Serializable {
 
         public Builder setRoomPw(String roomPw) {
             this.roomPw = roomPw;
+            return this;
+        }
+
+        public Builder setRoomDesc(String roomDesc) {
+            this.roomDesc = roomDesc;
             return this;
         }
 
@@ -203,8 +233,10 @@ public class XmppRoomConfig implements Serializable {
 
         public XmppRoomConfig create(){
             XmppRoomConfig config = new XmppRoomConfig();
+            config.setRoomJidPart(roomJidPart);
             config.setRoomNick(roomNick);
             config.setRoomPw(roomPw);
+            config.setRoomDesc(roomDesc);
             config.setPersistentroom(persistentroom);
             config.setMembersonly(membersonly);
             config.setAllowinvites(allowinvites);

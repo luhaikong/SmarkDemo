@@ -13,7 +13,11 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.smack.R;
+import com.smack.xmpp.XmppConnectionManager;
 import com.smack.xmpp.XmppRoomConfig;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by Administrator on 2018/6/29.
@@ -73,16 +77,24 @@ public class DialogCreateRoom extends DialogFragment {
                         }
                         if (ionClickListener!=null){
                             XmppRoomConfig.Builder builder1 = new XmppRoomConfig.Builder();
-                            builder1.setRoomNick(str_roomName);
-                            builder1.setRoomPw(str_roomPw);
-                            builder1.setPersistentroom(true);
-                            builder1.setMembersonly(false);
-                            builder1.setAllowinvites(true);
-                            builder1.setEnablelogging(true);
-                            builder1.setReservednick(true);
-                            builder1.setCanchangenick(false);
-                            builder1.setRegistration(false);
-                            builder1.setChangesubject(true);
+                            Date now = new Date( );
+                            SimpleDateFormat sdf = new SimpleDateFormat ("yyyyMMddhhmmss");
+                            String jidPart = sdf.format(now).concat("by").concat(XmppConnectionManager.newInstance().getOfXmppUserConfig().getOfUserName());
+                            SimpleDateFormat sdfdesc = new SimpleDateFormat ("yyyy/MM/dd");
+                            String desc = "本群创建于".concat(sdfdesc.format(now)).concat(":  群主很懒,什么都没有留下。");
+
+                            builder1.setRoomJidPart(jidPart)
+                                    .setRoomNick(str_roomName)
+                                    .setRoomPw(str_roomPw)
+                                    .setRoomDesc(desc)
+                                    .setPersistentroom(true)
+                                    .setMembersonly(true)
+                                    .setAllowinvites(true)
+                                    .setEnablelogging(true)
+                                    .setReservednick(true)
+                                    .setCanchangenick(false)
+                                    .setRegistration(false)
+                                    .setChangesubject(true);
                             XmppRoomConfig config = builder1.create();
                             ionClickListener.onPositiveClick(config);
                         }

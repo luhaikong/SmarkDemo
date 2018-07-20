@@ -12,6 +12,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,6 +22,7 @@ import com.smack.adapter.ChatAdapter;
 import com.smack.entity.XmppMessage;
 import com.smack.service.SmackPushService;
 import com.smack.xmpp.OutGoMsgListener;
+import com.smack.xmpp.XmppConnectionFlag;
 import com.smack.xmpp.XmppConnectionManager;
 import com.smack.xmppentity.GroupFriend;
 import com.smack.xmppentity.RoomHosted;
@@ -107,12 +110,41 @@ public class MultiUserChatActivity extends BaseSmackPushActivity implements View
                 onBackPressed();
             }
         });
+        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()){
+                    case R.id.menu_room_member_add:
+                        invitations(roomHosted.getJid(),"yanghuaxiong@rocketmq-03",XmppConnectionManager.newInstance().getOfXmppUserConfig().getAttr().get("name"),"");
+                        break;
+                    default:
+                        break;
+                }
+                return true;
+            }
+        });
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         btn_send = (Button) findViewById(R.id.btn_send);
         btn_send.setOnClickListener(this);
         et_content = (EditText) findViewById(R.id.et_content);
 
         initRecyclerView();
+    }
+
+    private void invitations(String mucJid, String otherJid, String nickNameMySelf, String password){
+        XmppConnectionManager.newInstance().invitations(new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                switch (msg.what) {
+                    case XmppConnectionFlag.KEY_FRIENDS_SUCCESS:
+                        showToast("邀请发送成功！");
+                        break;
+                    default:
+                        break;
+                }
+            }
+        },mucJid,otherJid,nickNameMySelf,password);
     }
 
     private void initRecyclerView(){
@@ -127,6 +159,12 @@ public class MultiUserChatActivity extends BaseSmackPushActivity implements View
     private void bindSmackPushService(){
         Intent intent = new Intent(this, SmackPushService.class);
         bindService(intent,pushConn,BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_room_member, menu);
+        return true;
     }
 
     @Override

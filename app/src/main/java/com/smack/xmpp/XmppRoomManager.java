@@ -3,6 +3,7 @@ package com.smack.xmpp;
 import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.smack.receiver.IntentReceiver;
 import com.smack.service.SmackPushCallBack;
@@ -15,6 +16,7 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
+import org.jivesoftware.smackx.muc.Affiliate;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.HostedRoom;
 import org.jivesoftware.smackx.muc.InvitationRejectionListener;
@@ -199,7 +201,7 @@ public class XmppRoomManager {
     public MultiUserChat createChatRoom(XMPPTCPConnection connection, String jid, XmppRoomConfig config) {
         try {
             MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
-            MultiUserChat muc = manager.getMultiUserChat(config.getRoomNick().concat("@").concat(jid));
+            MultiUserChat muc = manager.getMultiUserChat(config.getRoomJidPart().concat("@").concat(jid));
             muc.create(config.getRoomNick());
             return muc;
         } catch (Exception e) {
@@ -218,7 +220,7 @@ public class XmppRoomManager {
     public MultiUserChat setChatRoom(XMPPTCPConnection connection, String jid, XmppRoomConfig config){
         try {
             MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
-            MultiUserChat muc = manager.getMultiUserChat(config.getRoomNick().concat("@").concat(jid));
+            MultiUserChat muc = manager.getMultiUserChat(config.getRoomJidPart().concat("@").concat(jid));
             Form form = muc.getConfigurationForm();
             Form answerForm = form.createAnswerForm();
             for(FormField field:form.getFields()){
@@ -226,6 +228,8 @@ public class XmppRoomManager {
                     answerForm.setDefaultAnswer(field.getVariable());
                 }
             }
+            answerForm.setAnswer(XmppRoomConfig.FLAG_NAME,config.getRoomNick());
+            answerForm.setAnswer(XmppRoomConfig.FLAG_DESC,config.getRoomDesc());
             answerForm.setAnswer(XmppRoomConfig.FLAG_PERSISTENTROOM,config.isPersistentroom());
             answerForm.setAnswer(XmppRoomConfig.FLAG_MEMBERSONLY,config.isMembersonly());
             answerForm.setAnswer(XmppRoomConfig.FLAG_ALLOWINVITES,config.isAllowinvites());
@@ -273,20 +277,22 @@ public class XmppRoomManager {
      * @param connection
      * @param mucJid
      * @param otherJid
-     * @param nickName
+     * @param nickNameMySelf
      * @param password
      * @return
      */
-    public MultiUserChat invitations(XMPPTCPConnection connection, String mucJid, String otherJid, String nickName, String password){
+    public MultiUserChat invitations(XMPPTCPConnection connection, String mucJid, String otherJid, String nickNameMySelf, String password){
         try {
             MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
             MultiUserChat muc2 = manager.getMultiUserChat(mucJid);
-            muc2.join(nickName);
+            muc2.join(nickNameMySelf);
             // 监听房间邀请或拒绝邀请
             muc2.addInvitationRejectionListener(new InvitationRejectionListener() {
                 @Override
                 public void invitationDeclined(String invitee, String reason) {
-
+                    String inv = invitee;
+                    String res = reason;
+                    Log.d("TAG",inv.concat(reason));
                 }
             });
             // 邀请otherJid用户加入聊天室
@@ -373,6 +379,7 @@ public class XmppRoomManager {
         MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
         RoomMucInfo mucInfo = null;
         try {
+            manager.getMultiUserChat(mucJid).getMembers();
             RoomInfo info = manager.getRoomInfo(mucJid);
             mucInfo = new RoomMucInfo();
             mucInfo.setName(info.getName());

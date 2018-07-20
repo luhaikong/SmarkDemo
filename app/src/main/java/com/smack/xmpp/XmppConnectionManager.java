@@ -527,6 +527,25 @@ public class XmppConnectionManager {
         });
     }
 
+    public void invitations(final Handler handler, final String mucJid, final String otherJid, final String nickNameMySelf, final String password){
+        connection = getConnectionAndLogin();
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                MultiUserChat muc = XmppRoomManager.newInstance().invitations(connection,mucJid,otherJid,nickNameMySelf,password);
+                if (handler!=null){
+                    Message message = new Message();
+                    if (muc!=null){
+                        message.what = XmppConnectionFlag.KEY_FRIENDS_SUCCESS;
+                    } else {
+                        message.what = XmppConnectionFlag.KEY_FRIENDS_FAIL;
+                    }
+                    handler.sendMessage(message);
+                }
+            }
+        });
+    }
+
     public XMPPTCPConnection getConnection() {
         if (connection==null){
             throw new RuntimeException("Xmpp连接还未初始化！！！");
