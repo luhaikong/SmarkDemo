@@ -5,7 +5,7 @@ android {
     buildToolsVersion "25.0.3"
     defaultConfig {
         applicationId "com.smack"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -43,4 +43,5 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:25.3.1'
     compile 'com.android.support:support-vector-drawable:25.3.1'
     compile 'me.leolin:ShortcutBadger:1.1.21@aar'
+    compile 'com.lqr.emoji:library:1.0.2'
 }
