@@ -8,6 +8,7 @@ import android.util.Log;
 import com.smack.receiver.IntentReceiver;
 import com.smack.service.SmackPushCallBack;
 import com.smack.xmppentity.RoomHosted;
+import com.smack.xmppentity.RoomMember;
 import com.smack.xmppentity.RoomMucInfo;
 
 import org.jivesoftware.smack.MessageListener;
@@ -304,6 +305,49 @@ public class XmppRoomManager {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public List<RoomMember> getMembers(XMPPTCPConnection connection, String mucJid){
+        List<RoomMember> list = new ArrayList<>();
+        try {
+            MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
+            MultiUserChat muc2 = manager.getMultiUserChat(mucJid);
+            List<Affiliate> tempOwner = new ArrayList<>();
+            tempOwner = muc2.getOwners();
+            for (Affiliate affiliate:tempOwner){
+                RoomMember member = new RoomMember();
+                member.setJid(affiliate.getJid());
+                member.setNick(affiliate.getNick()==null?affiliate.getJid().split("@")[0]:affiliate.getNick());
+                member.setMucRole(affiliate.getRole()==null?"":affiliate.getRole().name());
+                member.setMucAffiliation(affiliate.getAffiliation()==null?"":affiliate.getAffiliation().name());
+                list.add(member);
+            }
+            List<Affiliate> tempAdmin = new ArrayList<>();
+            tempAdmin = muc2.getAdmins();
+            for (Affiliate affiliate:tempAdmin){
+                RoomMember member = new RoomMember();
+                member.setJid(affiliate.getJid());
+                member.setNick(affiliate.getNick()==null?affiliate.getJid().split("@")[0]:affiliate.getNick());
+                member.setMucRole(affiliate.getRole()==null?"":affiliate.getRole().name());
+                member.setMucAffiliation(affiliate.getAffiliation()==null?"":affiliate.getAffiliation().name());
+                list.add(member);
+            }
+            List<Affiliate> tempMember = new ArrayList<>();
+            tempMember = muc2.getMembers();
+            for (Affiliate affiliate:tempMember){
+                RoomMember member = new RoomMember();
+                member.setJid(affiliate.getJid());
+                member.setNick(affiliate.getNick()==null?affiliate.getJid().split("@")[0]:affiliate.getNick());
+                member.setMucRole(affiliate.getRole()==null?"":affiliate.getRole().name());
+                member.setMucAffiliation(affiliate.getAffiliation()==null?"":affiliate.getAffiliation().name());
+                list.add(member);
+            }
+        } catch (SmackException.NoResponseException
+                | XMPPException.XMPPErrorException
+                | SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     /**

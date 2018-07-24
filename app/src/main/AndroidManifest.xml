@@ -34,6 +34,8 @@
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
         <activity android:name=".MultiUserChatActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+        <activity android:name=".MultiUserListActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
         <activity android:name=".MainActivity2"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 

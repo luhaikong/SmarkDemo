@@ -8,4 +8,9 @@
         android:title="添加群成员"
         app:showAsAction="always"/>
 
+    <item
+        android:id="@+id/menu_person_list"
+        android:icon="@drawable/ic_group_black_24dp"
+        android:title="查看群成员" />
+
 </menu>

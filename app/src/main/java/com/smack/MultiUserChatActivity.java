@@ -117,6 +117,9 @@ public class MultiUserChatActivity extends BaseSmackPushActivity implements View
                     case R.id.menu_room_member_add:
                         invitations(roomHosted.getJid(),"yanghuaxiong@rocketmq-03",XmppConnectionManager.newInstance().getOfXmppUserConfig().getAttr().get("name"),"");
                         break;
+                    case R.id.menu_person_list:
+                        showMemberListActivity();
+                        break;
                     default:
                         break;
                 }
@@ -129,6 +132,12 @@ public class MultiUserChatActivity extends BaseSmackPushActivity implements View
         et_content = (EditText) findViewById(R.id.et_content);
 
         initRecyclerView();
+    }
+
+    private void showMemberListActivity(){
+        Intent intent = new Intent(mContext,MultiUserListActivity.class);
+        intent.putExtra(RoomHosted.OBJ,roomHosted);
+        startActivity(intent);
     }
 
     private void invitations(String mucJid, String otherJid, String nickNameMySelf, String password){

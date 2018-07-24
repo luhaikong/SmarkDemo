@@ -12,6 +12,7 @@ import com.smack.receiver.IntentReceiver;
 import com.smack.service.SmackPushCallBack;
 import com.smack.xmppentity.GroupFriend;
 import com.smack.xmppentity.RoomHosted;
+import com.smack.xmppentity.RoomMember;
 import com.smack.xmppentity.RoomMucInfo;
 
 import org.jivesoftware.smack.ConnectionListener;
@@ -24,6 +25,7 @@ import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
+import org.jivesoftware.smackx.muc.Affiliate;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import java.io.IOException;
@@ -540,6 +542,24 @@ public class XmppConnectionManager {
                     } else {
                         message.what = XmppConnectionFlag.KEY_FRIENDS_FAIL;
                     }
+                    handler.sendMessage(message);
+                }
+            }
+        });
+    }
+
+    public void getMembers(final Handler handler, final String mucJid){
+        connection = getConnectionAndLogin();
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                List<RoomMember> list = XmppRoomManager.newInstance().getMembers(connection,mucJid);
+                if (handler!=null){
+                    Message message = new Message();
+                    message.what = XmppConnectionFlag.KEY_FRIENDS_SUCCESS;
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable(XmppConnectionFlag.KEY_FRIENDS_SUCCESS_PARAMS, (Serializable) list);
+                    message.setData(bundle);
                     handler.sendMessage(message);
                 }
             }
