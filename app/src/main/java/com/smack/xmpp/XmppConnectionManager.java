@@ -32,9 +32,12 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Created by MyPC on 2018/5/25.
@@ -46,7 +49,7 @@ public class XmppConnectionManager {
     private XmppUserConfig ofXmppUserConfig;
     private XMPPTCPConnection connection;
     private boolean isLogoutNormal = false;//是否是正常退出
-    private ScheduledExecutorService executorService;
+    private ExecutorService executorService;
     private SmackPushCallBack smackPushCallBack;
 
     private static class Holder {
@@ -58,7 +61,7 @@ public class XmppConnectionManager {
     }
 
     public XmppConnectionManager(){
-        executorService = new ScheduledThreadPoolExecutor(3, new ThreadFactory() {
+        executorService = Executors.newCachedThreadPool(new ThreadFactory() {
             @Override
             public Thread newThread(@NonNull Runnable r) {
                 Thread thread = new Thread(r, "Smack Executor Service");
